@@ -1,6 +1,6 @@
 # FlowZap MCP Server
 
-Create workflow diagrams using AI assistants like Claude, Comet, and Cursor.
+Create workflow diagrams using AI assistants like Claude, Cursor, and Windsurf.
 
 ## What is FlowZap?
 
@@ -31,9 +31,20 @@ Config file locations:
 
 Add to your Cursor MCP settings with the same configuration.
 
-### For Comet Browser
+### For Windsurf IDE
 
-Use the Remote MCP URL: `https://flowzap.xyz/mcp/api/sse`
+Add to your `~/.codeium/windsurf/mcp_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "flowzap": {
+      "command": "npx",
+      "args": ["-y", "flowzap-mcp"]
+    }
+  }
+}
+```
 
 ## Available Tools
 
@@ -64,20 +75,31 @@ The assistant will:
 ```
 sales {
   # Sales Team
-  start: circle label:"Order Received"
-  validate: rect label:"Validate Order"
-  check: diamond label:"Valid?"
-  start -> validate -> check
+  n1: circle label:"Order Received"
+  n2: rectangle label:"Validate Order"
+  n3: diamond label:"Valid?"
+  n1.handle(right) -> n2.handle(left)
+  n2.handle(right) -> n3.handle(left)
+  n3.handle(right) -> fulfillment.n4.handle(left) [label="Yes"]
+  n3.handle(bottom) -> n6.handle(top) [label="No"]
+  n6: rectangle label:"Reject Order"
 }
 
 fulfillment {
   # Fulfillment
-  process: rect label:"Process Order"
-  ship: rect label:"Ship Items"
-  end: circle label:"Complete"
-  process -> ship -> end
+  n4: rectangle label:"Process Order"
+  n5: circle label:"Complete"
+  n4.handle(right) -> n5.handle(left)
 }
 ```
+
+**Key syntax rules:**
+- **Node IDs**: Must be `n1`, `n2`, `n3`... (globally unique, sequential)
+- **Shapes**: Only `circle`, `rectangle`, `diamond`, `taskbox`
+- **Node attributes**: Use colon → `label:"Text"`
+- **Edge labels**: Use equals in brackets → `[label="Yes"]`
+- **Edges**: Must use handles → `n1.handle(right) -> n2.handle(left)`
+- **Cross-lane**: Prefix with lane name → `fulfillment.n4.handle(left)`
 
 ## Security
 
@@ -108,8 +130,8 @@ This MCP server implements comprehensive security measures:
 
 - [FlowZap Website](https://flowzap.xyz)
 - [FlowZap Code Documentation](https://flowzap.xyz/flowzap-code)
-- [API Documentation](https://flowzap.xyz/docs/agent-api)
-- [Security Policy](https://flowzap.xyz/terms/agents)
+- [npm Package](https://www.npmjs.com/package/flowzap-mcp)
+- [MCP Registry](https://registry.modelcontextprotocol.io)
 
 ## License
 
