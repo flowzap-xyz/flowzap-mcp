@@ -1,6 +1,6 @@
 {
   "name": "flowzap-mcp",
-  "version": "1.0.3",
+  "version": "1.0.5",
   "mcpName": "io.github.flowzap-xyz/flowzap",
   "description": "MCP server for FlowZap - Create workflow diagrams via AI assistants",
   "main": "dist/index.js",
