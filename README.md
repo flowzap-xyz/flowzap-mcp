@@ -1,10 +1,10 @@
 # FlowZap MCP Server
 
-Create workflow diagrams using AI assistants like Claude, Cursor, and Windsurf.
+Create sequence and workflow diagrams using AI assistants like Claude, Cursor, and Windsurf.
 
 ## What is FlowZap?
 
-[FlowZap](https://flowzap.xyz) is a visual workflow diagramming tool with a text-based DSL called **FlowZap Code**. This MCP server lets AI assistants create diagrams for you.
+[FlowZap](https://flowzap.xyz) is an AI workflow and sequence diagramming tool with a text-based DSL called **FlowZap Code**. This MCP server lets AI assistants create Sequence and Worflow diagrams in seconds.
 
 ## Installation
 
@@ -61,6 +61,7 @@ Get FlowZap Code syntax documentation and examples.
 
 Ask your AI assistant:
 
+- "Generate a Sequence diagram of the current Sign In flow implemented in this App"
 - "Create a workflow diagram for an order processing system"
 - "Make a flowchart showing user registration flow"
 - "Diagram a CI/CD pipeline with build, test, and deploy stages"
@@ -68,7 +69,7 @@ Ask your AI assistant:
 The assistant will:
 1. Generate FlowZap Code based on your description
 2. Validate the code
-3. Create a playground URL you can view and share
+3. Create a playground URL to view the diagrams and share
 
 ## FlowZap Code Example
 
@@ -130,6 +131,7 @@ This MCP server implements comprehensive security measures:
 
 - [FlowZap Website](https://flowzap.xyz)
 - [FlowZap Code Documentation](https://flowzap.xyz/flowzap-code)
+- [FlowZap MCP](https://flowzap.xyz/blog/introducing-the-flowzap-mcp-server)
 - [npm Package](https://www.npmjs.com/package/flowzap-mcp)
 - [MCP Registry](https://registry.modelcontextprotocol.io)
 
