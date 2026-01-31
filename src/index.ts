@@ -186,7 +186,18 @@ const tools: Tool[] = [
 const FLOWZAP_SYNTAX = `
 # FlowZap Code Syntax Guide
 
+**Complete MCP Documentation:** https://flowzap.xyz/docs/mcp
+**Raw Markdown (for LLMs):** https://flowzap.xyz/docs/mcp.md
+
 FlowZap Code is a domain-specific language for creating workflow diagrams.
+
+## Global Constraints (IMPORTANT)
+- Use UTF-8 plain text only - NO emojis or special characters
+- Node IDs must be n1, n2, n3... (globally unique, sequential, no gaps)
+- Only 4 shapes allowed: circle, rectangle, diamond, taskbox
+- Only 4 node attributes allowed: label, owner, description, system
+- Comments ONLY allowed as "# Display Label" immediately after lane opening brace
+- No Mermaid, PlantUML, or other diagram syntaxes
 
 ## Basic Structure
 
@@ -208,6 +219,7 @@ laneName {
 - Node IDs must be n1, n2, n3... (globally unique, sequential, no gaps)
 - Format: \`nX: shape label:"Text"\`
 - Node attributes use **colon**: \`label:"Text"\`
+- Keep labels under 50 characters for readability
 
 Examples:
 \`\`\`
@@ -221,7 +233,7 @@ n4: taskbox owner:"Alice" description:"Deploy" system:"CI"
 - Edges MUST use handle syntax: \`source.handle(direction) -> target.handle(direction)\`
 - Directions: left, right, top, bottom
 - Edge labels use **equals with brackets**: \`[label="Text"]\`
-- Cross-lane edges prefix target with lane: \`laneName.nX.handle(direction)\`
+- Cross-lane edges MUST prefix target with valid lane name: \`laneName.nX.handle(direction)\`
 
 Examples:
 \`\`\`
@@ -229,6 +241,12 @@ n1.handle(right) -> n2.handle(left)
 n2.handle(bottom) -> n3.handle(top) [label="Yes"]
 n3.handle(bottom) -> fulfillment.n4.handle(top) [label="Send"]
 \`\`\`
+
+## Loops
+- Format: \`loop [condition] n1 n2 n3\`
+- Must be inside a lane block
+- Cannot be nested
+- Should reference at least 2 nodes
 
 ## Example: Order Processing
 
@@ -254,10 +272,15 @@ fulfillment {
 \`\`\`
 
 ## Common Mistakes to Avoid
-- ❌ \`n1: rect\` → ✅ \`n1: rectangle\` (use full shape name)
-- ❌ \`n1 -> n2\` → ✅ \`n1.handle(right) -> n2.handle(left)\` (handles required)
-- ❌ \`label="Text"\` on nodes → ✅ \`label:"Text"\` (colon for node attributes)
-- ❌ \`[label:"Text"]\` on edges → ✅ \`[label="Text"]\` (equals for edge labels)
+- Using emojis or special characters (use plain text only)
+- Using unknown attributes like \`priority:"high"\` (only label, owner, description, system)
+- Placing comments anywhere except right after lane opening brace
+- Cross-lane refs to undefined lanes (e.g., \`undefined.n5\`)
+- \`n1: rect\` instead of \`n1: rectangle\` (use full shape name)
+- \`n1 -> n2\` instead of \`n1.handle(right) -> n2.handle(left)\` (handles required)
+- \`label="Text"\` on nodes instead of \`label:"Text"\` (colon for node attributes)
+- \`[label:"Text"]\` on edges instead of \`[label="Text"]\` (equals for edge labels)
+- Labels longer than 50 characters (keep them concise)
 `;
 
 // =============================================================================

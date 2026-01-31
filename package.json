@@ -1,8 +1,8 @@
 {
   "name": "flowzap-mcp",
-  "version": "1.0.5",
+  "version": "1.2.1",
   "mcpName": "io.github.flowzap-xyz/flowzap",
-  "description": "MCP server for FlowZap - Create workflow diagrams via AI assistants",
+  "description": "MCP server for FlowZap - Create workflow and sequence diagrams via AI assistants. Works with Claude Desktop, Claude Code, Cursor, Windsurf, OpenAI Codex, Warp, Zed, Cline, Roo Code, Continue.dev, and Sourcegraph Cody.",
   "main": "dist/index.js",
   "bin": {
     "flowzap-mcp": "./dist/index.js"
@@ -18,8 +18,15 @@
     "flowzap",
     "diagrams",
     "workflow",
+    "sequence-diagram",
     "ai",
     "claude",
+    "cursor",
+    "windsurf",
+    "codex",
+    "cline",
+    "zed",
+    "warp",
     "model-context-protocol"
   ],
   "author": "FlowZap <hello@flowzap.xyz>",

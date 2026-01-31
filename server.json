@@ -2,7 +2,7 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.flowzap-xyz/flowzap",
   "title": "FlowZap",
-  "description": "Generates instant beautiful workflow and sequence diagrams via AI assistants and FlowZap Code.",
+  "description": "Create workflow and sequence diagrams via AI assistants using FlowZap Code DSL.",
   "websiteUrl": "https://flowzap.xyz/blog/introducing-the-flowzap-mcp-server",
   "icons": [
     {
@@ -15,12 +15,12 @@
     "url": "https://github.com/flowzap-xyz/flowzap-mcp",
     "source": "github"
   },
-  "version": "1.0.5",
+  "version": "1.2.1",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "flowzap-mcp",
-      "version": "1.0.5",
+      "version": "1.2.1",
       "transport": {
         "type": "stdio"
       }

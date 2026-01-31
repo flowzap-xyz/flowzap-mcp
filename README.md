@@ -1,6 +1,6 @@
 # FlowZap MCP Server
 
-Create sequence and workflow diagrams using AI assistants like Claude, Cursor, and Windsurf.
+Create sequence and workflow diagrams using AI assistants like Claude, Cursor, Windsurf, and 8 other MCP-compatible tools.
 
 [FlowZap](https://flowzap.xyz) is a visual workflow diagramming tool with a text-based DSL called **FlowZap Code**. This MCP server lets AI assistants create diagrams for you.
 
@@ -16,32 +16,29 @@ FlowZap turns text prompts into dual-view diagrams (Flowchart & Sequence diagram
 
 ## Installation
 
-### For Claude Desktop
+The FlowZap MCP Server works with **any tool that supports the Model Context Protocol (MCP)**:
 
-Add to your `claude_desktop_config.json`:
+### All Compatible Coding Tools
 
-```json
-{
-  "mcpServers": {
-    "flowzap": {
-      "command": "npx",
-      "args": ["-y", "flowzap-mcp"]
-    }
-  }
-}
-```
+| Tool | How to Configure |
+|------|------------------|
+| **Claude Desktop** | Add to `claude_desktop_config.json`:<br>**macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`<br>**Windows:** `%APPDATA%\Claude\claude_desktop_config.json` |
+| **Claude Code** | Run: `claude mcp add --transport stdio flowzap -- npx -y flowzap-mcp`<br>Or add to `.mcp.json` in your project root. |
+| **Cursor** | Open Settings → Features → MCP Servers → Add Server. Use the same JSON config. |
+| **Windsurf IDE** | Add to `~/.codeium/windsurf/mcp_config.json` |
+| **OpenAI Codex** | Add to `~/.codex/config.toml`:<br>`[mcp_servers.flowzap]`<br>`command = "npx"`<br>`args = ["-y", "flowzap-mcp"]`<br>Or run: `codex mcp add flowzap -- npx -y flowzap-mcp` |
+| **Warp Terminal** | Settings → MCP Servers → Click "+ Add" → Paste the JSON config. |
+| **Zed Editor** | Add to `settings.json`:<br>`{"context_servers": {"flowzap": {"command": "npx", "args": ["-y", "flowzap-mcp"]}}}` |
+| **Cline** (VS Code) | Open Cline sidebar → MCP Servers icon → Edit `cline_mcp_settings.json` |
+| **Roo Code** (VS Code) | Add to `.roo/mcp.json` in project or global settings. |
+| **Continue.dev** | Create `.continue/mcpServers/flowzap.yaml` with:<br>`name: FlowZap`<br>`mcpServers:`<br>`  - name: flowzap`<br>`    command: npx`<br>`    args: ["-y", "flowzap-mcp"]` |
+| **Sourcegraph Cody** | Add to VS Code `settings.json` via `openctx.providers` configuration. |
 
-Config file locations:
-- **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
-- **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
+> **Not Compatible:** Replit and Lovable.dev only support remote MCP servers via URL. Use the [Public API](https://flowzap.xyz/api/playground/create) instead.
 
-### For Cursor
+### JSON Configuration
 
-Add the same configuration to your Cursor MCP settings.
-
-### For Windsurf IDE
-
-Add to `~/.codeium/windsurf/mcp_config.json`:
+All tools use the same JSON configuration format:
 
 ```json
 {
@@ -58,6 +55,7 @@ Add to `~/.codeium/windsurf/mcp_config.json`:
 > ```json
 > "command": "C:\\Program Files\\nodejs\\npx.cmd"
 > ```
+> Find your npx path with: `where.exe npx`
 
 ## Available Tools
 
