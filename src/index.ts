@@ -159,13 +159,18 @@ const tools: Tool[] = [
   {
     name: "flowzap_create_playground",
     description:
-      "Create a FlowZap playground session with the given code and return a shareable URL. Use this after generating FlowZap Code to give the user a visual diagram.",
+      "Create a FlowZap playground session with the given code and return a shareable URL. Use this after generating FlowZap Code to give the user a visual diagram. Set view to 'architecture' when user requests an architecture diagram.",
     inputSchema: {
       type: "object" as const,
       properties: {
         code: {
           type: "string",
           description: "FlowZap Code to load in the playground",
+        },
+        view: {
+          type: "string",
+          enum: ["workflow", "sequence", "architecture"],
+          description: "View mode for the diagram. Use 'architecture' for architecture diagrams, 'sequence' for sequence diagrams, 'workflow' (default) for workflow diagrams.",
         },
       },
       required: ["code"],
@@ -202,8 +207,7 @@ FlowZap Code is a domain-specific language for creating workflow diagrams.
 ## Basic Structure
 
 \`\`\`
-laneName {
-  # Lane Display Name
+laneName { # Lane Display Name
   n1: shapeType label:"Node Label"
   n1.handle(right) -> n2.handle(left)
 }
@@ -248,11 +252,18 @@ n3.handle(bottom) -> fulfillment.n4.handle(top) [label="Send"]
 - Cannot be nested
 - Should reference at least 2 nodes
 
+## Common Mistakes to Avoid
+- Lane comment on separate line (WRONG: \`laneName {\n  # Label\`). Must be on same line: \`laneName { # Label\`
+- Using emojis or special characters in labels
+- Using non-sequential node IDs (n1, n3, n5 instead of n1, n2, n3)
+- Missing handle syntax on edges
+- Using \`label="Text"\` on nodes (should be \`label:"Text"\`)
+- Using \`[label:"Text"]\` on edges (should be \`[label="Text"]\`)
+
 ## Example: Order Processing
 
 \`\`\`
-sales {
-  # Sales Team
+sales { # Sales Team
   n1: circle label:"Order Received"
   n2: rectangle label:"Validate Order"
   n3: diamond label:"Valid?"
@@ -263,24 +274,12 @@ sales {
   n6: rectangle label:"Reject Order"
 }
 
-fulfillment {
-  # Fulfillment
+fulfillment { # Fulfillment
   n4: rectangle label:"Process Order"
   n5: circle label:"Complete"
   n4.handle(right) -> n5.handle(left)
 }
 \`\`\`
-
-## Common Mistakes to Avoid
-- Using emojis or special characters (use plain text only)
-- Using unknown attributes like \`priority:"high"\` (only label, owner, description, system)
-- Placing comments anywhere except right after lane opening brace
-- Cross-lane refs to undefined lanes (e.g., \`undefined.n5\`)
-- \`n1: rect\` instead of \`n1: rectangle\` (use full shape name)
-- \`n1 -> n2\` instead of \`n1.handle(right) -> n2.handle(left)\` (handles required)
-- \`label="Text"\` on nodes instead of \`label:"Text"\` (colon for node attributes)
-- \`[label:"Text"]\` on edges instead of \`[label="Text"]\` (equals for edge labels)
-- Labels longer than 50 characters (keep them concise)
 `;
 
 // =============================================================================
@@ -331,7 +330,7 @@ async function validateCode(rawCode: unknown): Promise<any> {
 /**
  * Create playground session via API (with security checks)
  */
-async function createPlayground(rawCode: unknown): Promise<any> {
+async function createPlayground(rawCode: unknown, view?: string): Promise<any> {
   // Input validation
   const sanitized = sanitizeCode(rawCode);
   if (!sanitized.valid) {
@@ -340,12 +339,14 @@ async function createPlayground(rawCode: unknown): Promise<any> {
   }
   
   const code = sanitized.code!;
-  securityLog("API_CALL", { endpoint: "playground/create", codeLength: code.length });
+  const validViews = ["workflow", "sequence", "architecture"];
+  const safeView = view && validViews.includes(view) ? view : undefined;
+  securityLog("API_CALL", { endpoint: "playground/create", codeLength: code.length, view: safeView });
   
   const response = await secureFetch(`${FLOWZAP_API_BASE}/api/playground/create`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ code }),
+    body: JSON.stringify({ code, view: safeView }),
   });
   
   // Validate response
@@ -389,7 +390,7 @@ async function handleValidate(code: unknown): Promise<string> {
   }
 }
 
-async function handleCreatePlayground(code: unknown): Promise<string> {
+async function handleCreatePlayground(code: unknown, view?: string): Promise<string> {
   try {
     // First validate
     const validation = await validateCode(code);
@@ -398,10 +399,11 @@ async function handleCreatePlayground(code: unknown): Promise<string> {
       return `❌ Cannot create playground - code has errors:\n${errors}`;
     }
 
-    // Create playground
-    const result = await createPlayground(code);
+    // Create playground with optional view parameter
+    const result = await createPlayground(code, view);
     if (result.url) {
-      return `✅ Playground created!\n\n🔗 **View your diagram:** ${result.url}\n\nThe diagram is ready to view and edit. Share this link with anyone!`;
+      const viewLabel = view === "architecture" ? "Architecture Diagram" : view === "sequence" ? "Sequence Diagram" : "Diagram";
+      return `Your diagram was created successfully.\nView your ${viewLabel}: ${result.url}`;
     } else if (result.error) {
       return `❌ Failed to create playground: ${result.error}`;
     } else {
@@ -453,8 +455,8 @@ server.setRequestHandler(CallToolRequestSchema, async (request: any) => {
     }
 
     case "flowzap_create_playground": {
-      const code = (args as { code?: unknown })?.code;
-      const result = await handleCreatePlayground(code);
+      const { code, view } = args as { code?: unknown; view?: string };
+      const result = await handleCreatePlayground(code, view);
       return { content: [{ type: "text", text: result }] };
     }
 
