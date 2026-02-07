@@ -131,7 +131,7 @@ async function secureFetch(url: string, options: RequestInit): Promise<Response>
       signal: controller.signal,
       headers: {
         ...options.headers,
-        "User-Agent": "flowzap-mcp/1.3.3",
+        "User-Agent": "flowzap-mcp/1.3.4",
         "X-MCP-Client": "flowzap-mcp",
       },
     });
@@ -266,6 +266,13 @@ n3.handle(bottom) -> fulfillment.n4.handle(top) [label="Send"]
 - Cannot be nested
 - Should reference at least 2 nodes
 
+## Sequence Diagram Best Practices
+FlowZap Code renders as both Workflow and Sequence views. The Sequence view draws messages top-to-bottom in **edge definition order**. Follow these rules for multi-lane code:
+- **Request-response pairing**: Every cross-lane request must have a corresponding return edge
+- **Chronological edge ordering**: Define edges in time order; sequence view uses definition order, not node IDs
+- **No orphaned nodes**: Every node must participate in at least one edge
+- **Separate async flows**: Define main-flow edges first, then background/async edges; never interleave
+
 ## Common Mistakes to Avoid
 - Lane comment on separate line (WRONG: \`laneName {\n  # Label\`). Must be on same line: \`laneName { # Label\`
 - Using emojis or special characters in labels
@@ -273,6 +280,8 @@ n3.handle(bottom) -> fulfillment.n4.handle(top) [label="Send"]
 - Missing handle syntax on edges
 - Using \`label="Text"\` on nodes (should be \`label:"Text"\`)
 - Using \`[label:"Text"]\` on edges (should be \`[label="Text"]\`)
+- Missing response edge for cross-lane requests (creates incomplete sequence diagrams)
+- Orphaned nodes with no edges (appear as disconnected steps)
 
 ## Example: Order Processing
 
@@ -434,7 +443,7 @@ async function handleCreatePlayground(code: unknown, view?: string): Promise<str
 const server = new Server(
   {
     name: "flowzap-mcp",
-    version: "1.3.3",
+    version: "1.3.4",
   },
   {
     capabilities: {

@@ -13,6 +13,7 @@ FlowZap turns text prompts into triple-view diagrams (Workflow, Sequence & Archi
 - Node attributes use colon: `label:"Text"`
 - Edge labels use equals: `[label="Text"]`
 - Handles required: `n1.handle(right) -> n2.handle(left)`
+- Sequence diagram quality: every cross-lane request needs a matching response edge; define edges in chronological order; no orphaned nodes
 
 ## Installation
 
