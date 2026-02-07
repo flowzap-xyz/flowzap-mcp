@@ -1,12 +1,12 @@
 # FlowZap MCP Server
 
-Create sequence and workflow diagrams using AI assistants like Claude, Cursor, Windsurf, and 8 other MCP-compatible tools.
+Create workflow, sequence, and architecture diagrams using AI assistants like Claude, Cursor, Windsurf, and 8 other MCP-compatible tools.
 
 [FlowZap](https://flowzap.xyz) is a visual workflow diagramming tool with a text-based DSL called **FlowZap Code**. This MCP server lets AI assistants create diagrams for you.
 
 ## What is FlowZap?
 
-FlowZap turns text prompts into dual-view diagrams (Flowchart & Sequence diagrams) using FlowZap Code DSL. It is NOT Mermaid, NOT PlantUML - it is a unique domain-specific language designed for simplicity and AI generation.
+FlowZap turns text prompts into triple-view diagrams (Workflow, Sequence & Architecture) using FlowZap Code DSL. It is NOT Mermaid, NOT PlantUML - it is a unique domain-specific language designed for simplicity and AI generation.
 
 **Key Facts:**
 - Only 4 shapes: `circle`, `rectangle`, `diamond`, `taskbox`
@@ -66,7 +66,7 @@ All tools use the same JSON configuration format:
 | `flowzap_create_playground` | Create a shareable diagram URL |
 | `flowzap_get_syntax` | Get FlowZap Code syntax documentation |
 
-### Agent-Focused Tools (v1.1.0+)
+### Agent-Focused Tools
 | Tool | Description |
 |------|-------------|
 | `flowzap_export_graph` | Export FlowZap Code as structured JSON graph (lanes, nodes, edges) for reasoning |
@@ -80,6 +80,7 @@ All tools use the same JSON configuration format:
 Ask your AI assistant:
 - "Generate a Sequence diagram of the current Sign In flow implemented in this App"
 - "Create a workflow diagram for an order processing system"
+- "Create an architecture diagram for a microservices API gateway"
 - "Make a flowchart showing user registration flow"
 - "Diagram a CI/CD pipeline with build, test, and deploy stages"
 
@@ -112,7 +113,7 @@ The agent uses `flowzap_apply_change` with a structured patch instead of regener
 The assistant will:
 1. Generate FlowZap Code based on your description
 2. Validate the code
-3. Create a playground URL to view the diagrams and share
+3. Create a playground URL with the appropriate view (workflow, sequence, or architecture) to view and share
 
 ## FlowZap Code Example
 

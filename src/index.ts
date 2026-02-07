@@ -7,6 +7,16 @@ import {
   ListToolsRequestSchema,
   Tool,
 } from "@modelcontextprotocol/sdk/types.js";
+import {
+  exportGraphTool,
+  handleExportGraph,
+  artifactToDiagramTool,
+  handleArtifactToDiagram,
+  diffTool,
+  applyChangeTool,
+  handleDiff,
+  handleApplyChange,
+} from "./tools/index.js";
 
 // =============================================================================
 // SECURITY CONFIGURATION
@@ -121,7 +131,7 @@ async function secureFetch(url: string, options: RequestInit): Promise<Response>
       signal: controller.signal,
       headers: {
         ...options.headers,
-        "User-Agent": "flowzap-mcp/1.0.0",
+        "User-Agent": "flowzap-mcp/1.3.1",
         "X-MCP-Client": "flowzap-mcp",
       },
     });
@@ -185,6 +195,10 @@ const tools: Tool[] = [
       properties: {},
     },
   },
+  exportGraphTool,
+  artifactToDiagramTool,
+  diffTool,
+  applyChangeTool,
 ];
 
 // FlowZap Code syntax documentation
@@ -420,7 +434,7 @@ async function handleCreatePlayground(code: unknown, view?: string): Promise<str
 const server = new Server(
   {
     name: "flowzap-mcp",
-    version: "1.0.0",
+    version: "1.3.1",
   },
   {
     capabilities: {
@@ -441,7 +455,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request: any) => {
   securityLog("TOOL_CALL", { tool: name });
 
   // Validate tool name (whitelist approach)
-  const allowedTools = ["flowzap_validate", "flowzap_create_playground", "flowzap_get_syntax"];
+  const allowedTools = ["flowzap_validate", "flowzap_create_playground", "flowzap_get_syntax", "flowzap_export_graph", "flowzap_artifact_to_diagram", "flowzap_diff", "flowzap_apply_change"];
   if (!allowedTools.includes(name)) {
     securityLog("UNKNOWN_TOOL", { tool: name });
     throw new Error(`Unknown tool: ${name}`);
@@ -462,6 +476,30 @@ server.setRequestHandler(CallToolRequestSchema, async (request: any) => {
 
     case "flowzap_get_syntax": {
       return { content: [{ type: "text", text: FLOWZAP_SYNTAX }] };
+    }
+
+    case "flowzap_export_graph": {
+      const code = (args as { code?: unknown })?.code;
+      const result = handleExportGraph(code);
+      return { content: [{ type: "text", text: result }] };
+    }
+
+    case "flowzap_artifact_to_diagram": {
+      const { artifactType, content, view } = args as { artifactType?: unknown; content?: unknown; view?: unknown };
+      const result = await handleArtifactToDiagram(artifactType, content, view);
+      return { content: [{ type: "text", text: result }] };
+    }
+
+    case "flowzap_diff": {
+      const { oldCode, newCode } = args as { oldCode?: unknown; newCode?: unknown };
+      const result = handleDiff(oldCode, newCode);
+      return { content: [{ type: "text", text: result }] };
+    }
+
+    case "flowzap_apply_change": {
+      const { code, operations } = args as { code?: unknown; operations?: unknown };
+      const result = await handleApplyChange(code, operations);
+      return { content: [{ type: "text", text: result }] };
     }
 
     default:
