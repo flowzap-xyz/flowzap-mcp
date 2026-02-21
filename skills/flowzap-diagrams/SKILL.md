@@ -24,14 +24,14 @@ If the FlowZap MCP server is not already configured, install it:
 
 ```bash
 # Claude Code
-claude mcp add --transport stdio flowzap -- npx -y flowzap-mcp
+claude mcp add --transport stdio flowzap -- npx -y flowzap-mcp@1.3.5
 
 # Or add to .mcp.json / claude_desktop_config.json / cursor / windsurf config:
 {
   "mcpServers": {
     "flowzap": {
       "command": "npx",
-      "args": ["-y", "flowzap-mcp"]
+      "args": ["-y", "flowzap-mcp@1.3.5"]
     }
   }
 }
@@ -148,7 +148,9 @@ n2.handle(right) -> n4.handle(left) [label="Yes"]
 
 ## Fallback: public API (no MCP)
 
-If the MCP server is unavailable, use these endpoints (no auth required):
+If the MCP server is unavailable, use these endpoints (no auth required).
+
+> **Privacy:** The flowzap.xyz API does not store user data. Sessions expire after 15 minutes.
 
 ```bash
 # Validate
