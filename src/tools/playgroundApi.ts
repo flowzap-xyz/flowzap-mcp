@@ -22,7 +22,7 @@ export async function createPlaygroundUrl(code: string): Promise<{ url?: string;
         "User-Agent": "flowzap-mcp/1.3.4",
         "X-MCP-Client": "flowzap-mcp",
       },
-      body: JSON.stringify({ code }),
+      body: JSON.stringify({ code, source: 'mcp' }),
       signal: controller.signal,
     });
 
