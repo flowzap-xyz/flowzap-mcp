@@ -1,10 +1,9 @@
 ---
 name: flowzap-diagrams
 description: >
-  Generate, validate, and share business process diagrams using FlowZap Code DSL.
-  Use when the user asks to create a workflow, flowchart, sequence diagram, or
-  process map. Produces .fz code and shareable playground URLs via the FlowZap MCP
-  server or public API.
+  Generate, validate and publish workflow, sequence and architecture diagrams, using FlowZap Code DSL.
+  Use when the user asks to create a workflow, flowchart, sequence diagram, process map or architecture diagram.
+  Produces .fz code and shareable playground URLs via the FlowZap MCP server or public API.
 ---
 
 # FlowZap Diagram Skill
