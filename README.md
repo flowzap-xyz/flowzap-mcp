@@ -144,6 +144,18 @@ fulfillment { # Fulfillment
 - **Rate limited** - 30 requests/minute client-side
 - **Input validation** - 50KB max code size
 
+## Agent Skill (skills.sh)
+
+Install the FlowZap skill for 40+ compatible coding agents via [skills.sh](https://skills.sh):
+
+```bash
+npx skills add flowzap-xyz/flowzap-mcp
+```
+
+- **skills.sh listing:** [https://skills.sh/flowzap-xyz/flowzap-mcp/flowzap-diagrams](https://skills.sh/flowzap-xyz/flowzap-mcp/flowzap-diagrams)
+- **Skill source:** [skills/flowzap-diagrams/](https://github.com/flowzap-xyz/flowzap-mcp/tree/main/skills/flowzap-diagrams)
+- Compatible with: Claude Code, Cursor, Windsurf, Codex, Gemini CLI, GitHub Copilot, Cline, Roo Code, Augment, OpenCode, and more.
+
 ## Links
 
 - [FlowZap Website](https://flowzap.xyz)

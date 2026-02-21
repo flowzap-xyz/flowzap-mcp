@@ -169,5 +169,5 @@ curl -X POST https://flowzap.xyz/api/playground/create \
 - [JSON syntax schema](https://flowzap.xyz/api/flowzap-code-schema.json)
 - [200+ workflow templates](https://flowzap.xyz/templates)
 - [MCP server docs](https://flowzap.xyz/docs/mcp)
-- [npm package — flowzap-mcp v1.3.4](https://www.npmjs.com/package/flowzap-mcp)
+- [npm package — flowzap-mcp v1.3.5](https://www.npmjs.com/package/flowzap-mcp)
 - [GitHub](https://github.com/flowzap-xyz/flowzap-mcp)
