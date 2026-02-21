@@ -148,21 +148,14 @@ n2.handle(right) -> n4.handle(left) [label="Yes"]
 
 ## Fallback: public API (no MCP)
 
-If the MCP server is unavailable, use these endpoints (no auth required).
+If the MCP server is unavailable, use the public REST API (no auth required):
+
+- **Validate:** `POST /api/validate` with `{"code": "..."}` body
+- **Create playground:** `POST /api/playground/create` with `{"code": "..."}` body (5/min, 50/day)
 
 > **Privacy:** The flowzap.xyz API does not store user data. Sessions expire after 15 minutes.
 
-```bash
-# Validate
-curl -X POST https://flowzap.xyz/api/validate \
-  -H "Content-Type: application/json" \
-  -d '{"code": "<flowzap code here>"}'
-
-# Create playground URL (5/min, 50/day)
-curl -X POST https://flowzap.xyz/api/playground/create \
-  -H "Content-Type: application/json" \
-  -d '{"code": "<flowzap code here>"}'
-```
+Full API documentation: [flowzap.xyz/docs/mcp](https://flowzap.xyz/docs/mcp)
 
 ## Further resources
 
