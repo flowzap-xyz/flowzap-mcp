@@ -2,8 +2,8 @@
 name: flowzap-diagrams
 description: >
   Generate, validate and publish workflow, sequence and architecture diagrams, using FlowZap Code DSL.
-  Use when the user asks to create a workflow, flowchart, sequence diagram, process map or architecture diagram.
-  Produces .fz code and shareable playground URLs via the FlowZap MCP server or public API.
+  Use when the user asks to create a workflow, flowchart, sequence diagram, process map or an architecture diagram.
+  Produces .fz code and shareable playground URLs via the FlowZap MCP server.
 ---
 
 # FlowZap Diagram Skill
@@ -14,7 +14,7 @@ coding agent.
 
 ## When to use this skill
 
-- User asks for a **workflow**, **flowchart**, **process diagram**, or **sequence diagram**.
+- User asks for a **workflow**, **flowchart**, **process diagram**, **sequence diagram**, or **achitecture diagram**.
 - User pastes HTTP logs, OpenAPI specs, or code and wants them visualised.
 - User wants to **compare** two diagram versions (diff) or **patch** an existing diagram.
 
@@ -40,7 +40,7 @@ claude mcp add --transport stdio flowzap -- npx -y flowzap-mcp@1.3.5
 Compatible tools: Claude Desktop, Claude Code, Cursor, Windsurf, OpenAI Codex,
 Warp, Zed, Cline, Roo Code, Continue.dev, Sourcegraph Cody.
 
-**Not compatible (use public API instead):** Replit, Lovable.dev.
+**Not compatible:** Replit, Lovable.dev.
 
 ## Available MCP tools
 
@@ -56,7 +56,7 @@ Warp, Zed, Cline, Roo Code, Continue.dev, Sourcegraph Cody.
 
 ## FlowZap Code DSL — quick reference
 
-FlowZap Code is **not** Mermaid, **not** PlantUML. It is a unique DSL.
+FlowZap Code is **not** Mermaid, **not** PlantUML. It is a unique DSL offering a simple syntax for a triple-view option to workflow, sequence and architecture diagrams.
 
 ### Shapes (only 4)
 
@@ -146,16 +146,7 @@ n2.handle(right) -> n4.handle(left) [label="Yes"]
 5. Return the FlowZap Code **and** the playground URL to the user.
 6. Always output **only** raw FlowZap Code when showing the diagram — no Markdown fences wrapping .fz content, no extra commentary mixed in.
 
-## Fallback: public API (no MCP)
-
-If the MCP server is unavailable, use the public REST API (no auth required):
-
-- **Validate:** `POST /api/validate` with `{"code": "..."}` body
-- **Create playground:** `POST /api/playground/create` with `{"code": "..."}` body (5/min, 50/day)
-
-> **Privacy:** The flowzap.xyz API does not store user data. Sessions expire after 15 minutes.
-
-Full API documentation: [flowzap.xyz/docs/mcp](https://flowzap.xyz/docs/mcp)
+Full MCP documentation: [flowzap.xyz/docs/mcp](https://flowzap.xyz/docs/mcp)
 
 ## Further resources
 
