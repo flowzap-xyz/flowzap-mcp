@@ -24,17 +24,34 @@ If the FlowZap MCP server is not already configured, install it:
 
 ```bash
 # Claude Code
-claude mcp add --transport stdio flowzap -- npx -y flowzap-mcp@1.3.5
+claude mcp add --transport stdio flowzap -- npx flowzap-mcp@1.3.5
 
 # Or add to .mcp.json / claude_desktop_config.json / cursor / windsurf config:
 {
   "mcpServers": {
     "flowzap": {
       "command": "npx",
-      "args": ["-y", "flowzap-mcp@1.3.5"]
+      "args": ["flowzap-mcp@1.3.5"]
     }
   }
 }
+```
+
+### Package verification
+
+The pinned version `1.3.5` can be verified against the npm registry:
+
+| Field | Value |
+|-------|-------|
+| **npm** | [flowzap-mcp@1.3.5](https://www.npmjs.com/package/flowzap-mcp/v/1.3.5) |
+| **Integrity (SHA-512)** | `sha512-MjiOEHoG08UdLflnls6Ij07bXiJmuGbCrWSm5fycizZ70PecVeAb0DSrrFxAPOB8hQcZ0Y/WQtXbgRRQr/t/nA==` |
+| **Shasum** | `374c7a966c1a1f350216c513df32383a772d360d` |
+| **Source** | [github.com/flowzap-xyz/flowzap-mcp](https://github.com/flowzap-xyz/flowzap-mcp) |
+| **License** | MIT |
+
+To verify locally before use:
+```bash
+npm view flowzap-mcp@1.3.5 dist.integrity dist.shasum
 ```
 
 Compatible tools: Claude Desktop, Claude Code, Cursor, Windsurf, OpenAI Codex,
@@ -151,6 +168,34 @@ n2.handle(right) -> n4.handle(left) [label="Yes"]
 6. Always output **only** raw FlowZap Code when showing the diagram — no Markdown fences wrapping .fz content, no extra commentary mixed in.
 
 Full MCP documentation: [flowzap.xyz/docs/mcp](https://flowzap.xyz/docs/mcp)
+
+## Security and data transparency
+
+The `flowzap-mcp` server runs locally on the user's machine (stdio transport) and enforces the following safeguards:
+
+| Control | Detail |
+|---------|--------|
+| **TLS only** | All outbound requests require `https://` and are restricted to `flowzap.xyz` (SSRF protection) |
+| **No authentication** | Uses only public FlowZap APIs; no API keys, tokens, or user credentials are stored or transmitted |
+| **No user-data access** | Cannot read diagrams, accounts, or any data beyond what the agent explicitly passes in |
+| **Input validation** | Code capped at 50 KB, total input at 100 KB; null bytes and control characters stripped |
+| **Rate limiting** | Client-side 30 requests/minute sliding window |
+| **Request timeout** | 30-second hard timeout with `AbortController` |
+| **Response sanitization** | Only expected fields are returned; playground URLs validated against allowlist |
+| **Audit logging** | All tool calls and API requests logged to `stderr` (not exposed to the MCP client) |
+
+### Data flow scope
+
+The MCP server sends only the FlowZap Code provided by the agent to two public endpoints:
+
+1. `POST https://flowzap.xyz/api/validate` — returns syntax validation result
+2. `POST https://flowzap.xyz/api/playground/create` — returns an ephemeral playground URL (60-minute TTL, non-guessable token)
+
+No other data (file paths, environment variables, user identity) is transmitted.
+
+### Playground URL access controls
+
+Playground URLs are ephemeral, time-limited (60-minute TTL), and use non-guessable cryptographic tokens. They are read-only views of the diagram code submitted at creation time. No account or login is required to view them; no data persists beyond the TTL.
 
 ## Further resources
 
