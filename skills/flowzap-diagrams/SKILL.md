@@ -79,6 +79,10 @@ FlowZap Code is **not** Mermaid, **not** PlantUML. It is a unique DSL offering a
 - **Loops**: `loop [condition] n1 n2 n3` — flat, inside a lane block
 - **Layout**: prefer horizontal left→right; use top/bottom only for cross-lane hops
 
+### Multi-lane sequence design
+
+- **Ping-pong rule**: For multi-participant processes, every cross-lane interaction must alternate back-and-forth between lanes. A request from Lane A → Lane B must be followed by a response from Lane B → Lane A before any new request from Lane A. This ensures the sequence view renders meaningful request-response message pairs rather than one-way broadcasts.
+
 ### Gotchas — never do these
 
 - Do NOT use `label="Text"` on nodes (must be `label:"Text"`).
