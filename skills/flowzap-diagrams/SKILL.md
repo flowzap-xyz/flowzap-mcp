@@ -3,7 +3,7 @@ name: flowzap-diagrams
 description: >
   Generate, validate and publish workflow, sequence and architecture diagrams, using FlowZap Code DSL.
   Use when the user asks to create a workflow, flowchart, sequence diagram, process map or an architecture diagram.
-  Produces .fz code and shareable playground URLs via the FlowZap MCP server.
+  Produces .fz code and instant shareable playground URLs via the FlowZap MCP server.
 ---
 
 # FlowZap Diagram Skill
@@ -196,6 +196,24 @@ No other data (file paths, environment variables, user identity) is transmitted.
 ### Playground URL access controls
 
 Playground URLs are ephemeral, time-limited (60-minute TTL), and use non-guessable cryptographic tokens. They are read-only views of the diagram code submitted at creation time. No account or login is required to view them; no data persists beyond the TTL.
+
+### Data lifecycle
+
+| Endpoint | Data stored | Retention |
+|----------|-------------|-----------|
+| `POST /api/validate` | **None** — stateless; code is parsed in memory and discarded after the response | 0 (not persisted) |
+| `POST /api/playground/create` | FlowZap Code only (in PostgreSQL) | 60 minutes (database row + playground URL both expire) |
+
+The playground session is stored server-side with a cryptographic token (UUID v4). After the 60-minute TTL, the session is deleted — either on the next access attempt or during a periodic sweep. No user identity, file paths, environment variables, or host metadata are attached to the session.
+
+### What the MCP server does NOT do
+
+- **No filesystem access** — cannot read or write files on the host machine
+- **No environment variable access** — does not read or transmit `process.env` or shell variables
+- **No code execution** — does not evaluate, compile, or run any user code; it only transmits FlowZap DSL text
+- **No network scanning** — outbound connections are restricted to `flowzap.xyz` over TLS (SSRF-protected allowlist)
+- **No long-term data persistence** — playground sessions expire after 60 minutes; the validate endpoint stores nothing
+- **No telemetry or tracking** — no analytics, device fingerprinting, or usage data is collected by the MCP server; server-side API logs record only IP, user-agent, and code length (not code content)
 
 ## Further resources
 
