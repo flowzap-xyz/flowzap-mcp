@@ -13,7 +13,8 @@ FlowZap turns text prompts into triple-view diagrams (Workflow, Sequence & Archi
 - Node attributes use colon: `label:"Text"`
 - Edge labels use equals: `[label="Text"]`
 - Handles required: `n1.handle(right) -> n2.handle(left)`
-- Sequence diagram quality: every cross-lane request needs a matching response edge; define edges in chronological order; no orphaned nodes
+- Lane display label must be on the same line as the opening brace: `laneName { # Label`
+- Sequence diagram quality: every cross-lane request needs a matching response edge before the next major request; define edges in chronological order; keep a strict request → response → next request rhythm; no orphaned nodes
 
 ## Installation
 
@@ -121,17 +122,17 @@ The assistant will:
 ```
 sales { # Sales Team
   n1: circle label:"Order Received"
-  n2: rectangle label:"Validate Order"
-  n3: diamond label:"Valid?"
+  n2: rectangle label:"Submit Order"
+  n5: rectangle label:"Receive decision"
   n1.handle(right) -> n2.handle(left)
-  n2.handle(right) -> n3.handle(left)
-  n3.handle(right) -> fulfillment.n4.handle(left) [label="Yes"]
+  n2.handle(bottom) -> fulfillment.n3.handle(top) [label="Submit"]
 }
 
 fulfillment { # Fulfillment
-  n4: rectangle label:"Process Order"
-  n5: circle label:"Complete"
-  n4.handle(right) -> n5.handle(left)
+  n3: rectangle label:"Review Order"
+  n4: rectangle label:"Return decision"
+  n3.handle(right) -> n4.handle(left)
+  n4.handle(top) -> sales.n5.handle(bottom) [label="Approved"]
 }
 ```
 

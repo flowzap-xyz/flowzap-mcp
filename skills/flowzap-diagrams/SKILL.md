@@ -24,14 +24,14 @@ If the FlowZap MCP server is not already configured, install it:
 
 ```bash
 # Claude Code
-claude mcp add --transport stdio flowzap -- npx flowzap-mcp@1.3.5
+claude mcp add --transport stdio flowzap -- npx flowzap-mcp@1.3.6
 
 # Or add to .mcp.json / claude_desktop_config.json / cursor / windsurf config:
 {
   "mcpServers": {
     "flowzap": {
       "command": "npx",
-      "args": ["flowzap-mcp@1.3.5"]
+      "args": ["flowzap-mcp@1.3.6"]
     }
   }
 }
@@ -39,19 +39,19 @@ claude mcp add --transport stdio flowzap -- npx flowzap-mcp@1.3.5
 
 ### Package verification
 
-The pinned version `1.3.5` can be verified against the npm registry:
+The pinned version `1.3.6` can be verified against the npm registry:
 
 | Field | Value |
 |-------|-------|
-| **npm** | [flowzap-mcp@1.3.5](https://www.npmjs.com/package/flowzap-mcp/v/1.3.5) |
-| **Integrity (SHA-512)** | `sha512-MjiOEHoG08UdLflnls6Ij07bXiJmuGbCrWSm5fycizZ70PecVeAb0DSrrFxAPOB8hQcZ0Y/WQtXbgRRQr/t/nA==` |
-| **Shasum** | `374c7a966c1a1f350216c513df32383a772d360d` |
+| **npm** | [flowzap-mcp@1.3.6](https://www.npmjs.com/package/flowzap-mcp/v/1.3.6) |
+| **Integrity (SHA-512)** | `sha512-9pnsETVvbCj5+cDEbiwRBWbqaA+FDMIJFU/vylXCnJOAt6nuvlFQf3/M8WI6EeBoVtGw/OyBZtJTQSjFUh4U0w==` |
+| **Shasum** | `86a434a49f4ec9e6fae76cc34acb73f357e81b1f` |
 | **Source** | [github.com/flowzap-xyz/flowzap-mcp](https://github.com/flowzap-xyz/flowzap-mcp) |
 | **License** | MIT |
 
 To verify locally before use:
 ```bash
-npm view flowzap-mcp@1.3.5 dist.integrity dist.shasum
+npm view flowzap-mcp@1.3.6 dist.integrity dist.shasum
 ```
 
 Compatible tools: Claude Desktop, Claude Code, Cursor, Windsurf, OpenAI Codex,
@@ -92,13 +92,14 @@ FlowZap Code is **not** Mermaid, **not** PlantUML. It is a unique DSL offering a
 - **Handles** are required on every edge: `n1.handle(right) -> n2.handle(left)`
 - **Directions**: `left`, `right`, `top`, `bottom`
 - **Cross-lane edges**: prefix target with lane name: `sales.n5.handle(top)`
-- **Lane display label**: one `# Label` comment right after opening brace
+- **Lane display label**: one `# Label` comment on the same line as the opening brace
 - **Loops**: `loop [condition] n1 n2 n3` — flat, inside a lane block
 - **Layout**: prefer horizontal left→right; use top/bottom only for cross-lane hops
 
 ### Multi-lane sequence design
 
-- **Ping-pong rule**: For multi-participant processes, every cross-lane interaction must alternate back-and-forth between lanes. A request from Lane A → Lane B must be followed by a response from Lane B → Lane A before any new request from Lane A. This ensures the sequence view renders meaningful request-response message pairs rather than one-way broadcasts.
+- **Ping-pong rule**: For multi-participant processes, every cross-lane interaction must alternate back-and-forth between lanes. A request from Lane A → Lane B must be followed by a response from Lane B → Lane A before any new major cross-lane request begins. This is now a strict validation requirement, not just a readability suggestion.
+- **Chronological order**: The sequence view follows cross-lane edge definition order. Define request, response, then next request in the exact order they happen.
 
 ### Gotchas — never do these
 
@@ -131,14 +132,16 @@ n2.handle(right) -> n3.handle(left)
 user { # User
 n1: circle label:"Start"
 n2: rectangle label:"Submit"
+n5: rectangle label:"Receive result"
 n1.handle(right) -> n2.handle(left)
 n2.handle(bottom) -> app.n3.handle(top) [label="Send"]
 }
 
 app { # App
 n3: rectangle label:"Process"
-n4: circle label:"Done"
+n4: rectangle label:"Respond"
 n3.handle(right) -> n4.handle(left)
+n4.handle(top) -> user.n5.handle(bottom) [label="Result"]
 }
 ```
 
@@ -222,5 +225,5 @@ The playground session is stored server-side with a cryptographic token (UUID v4
 - [JSON syntax schema](https://flowzap.xyz/api/flowzap-code-schema.json)
 - [200+ workflow templates](https://flowzap.xyz/templates)
 - [MCP server docs](https://flowzap.xyz/docs/mcp)
-- [npm package — flowzap-mcp v1.3.5](https://www.npmjs.com/package/flowzap-mcp)
+- [npm package — flowzap-mcp v1.3.6](https://www.npmjs.com/package/flowzap-mcp)
 - [GitHub](https://github.com/flowzap-xyz/flowzap-mcp)
