@@ -4,34 +4,83 @@ description: >
   Generate, validate and publish workflow, sequence and architecture diagrams, using FlowZap Code DSL.
   Use when the user asks to create a workflow, flowchart, sequence diagram, process map or an architecture diagram.
   Produces .fz code and instant shareable playground URLs via the FlowZap MCP server.
+tags:
+  - workflow
+  - flowchart
+  - sequence-diagram
+  - architecture
+  - mcp
+  - automation
+  - no-code
+  - agent-tools
 ---
 
 # FlowZap Diagram Skill
 
-Generate valid FlowZap Code (.fz) diagrams from natural-language descriptions,
-validate them, and return shareable playground URLs — all without leaving your
-coding agent.
+Generate valid FlowZap Code (`.fz`) diagrams from natural-language requests,
+validate them, and return shareable FlowZap playground URLs.
+
+This skill is designed to be paired with the `flowzap-mcp` server. The skill
+gives the agent FlowZap-specific diagram knowledge and output rules; the MCP
+server provides the actual tools.
+
+## Trust and privacy summary
+
+- This skill bundle is documentation only: `SKILL.md` plus reference files. It
+  does not execute code by itself.
+- The `flowzap-mcp` server runs locally on the user's machine over stdio.
+- Outbound requests are restricted to `https://flowzap.xyz`.
+- Raw HTTP logs, OpenAPI specs, and code snippets are parsed locally inside the
+  MCP package. Only generated FlowZap Code is sent to FlowZap public endpoints
+  when validation or playground creation is requested.
 
 ## When to use this skill
 
-- User asks for a **workflow**, **flowchart**, **process diagram**, **sequence diagram**, or **achitecture diagram**.
+- User asks for a **workflow**, **flowchart**, **process diagram**, **sequence diagram**, or **architecture diagram**.
 - User pastes HTTP logs, OpenAPI specs, or code and wants them visualised.
 - User wants to **compare** two diagram versions (diff) or **patch** an existing diagram.
 
-## MCP server setup (one-time)
+## Installation model
+
+This setup has two parts:
+
+1. Install the **skill bundle** so your agent knows when to use FlowZap and how
+   to produce correct FlowZap Code.
+2. Install the **MCP server** so your agent can validate code, create
+   playground URLs, diff diagrams, and apply structured changes.
+
+### Install the skill bundle
+
+Recommended:
+
+```bash
+npx skills add flowzap-xyz/flowzap-mcp --skill flowzap-diagrams
+```
+
+If your agent does not support `skills.sh`, install this bundle through your
+agent's skill manager or by copying the folder into the agent's local skills
+directory.
+
+Manual locations:
+
+- Claude Code: `.claude/skills/flowzap-diagrams/SKILL.md`
+- Windsurf: `.windsurf/skills/flowzap-diagrams/SKILL.md`
+- Cursor: `.cursor/skills/flowzap-diagrams/SKILL.md`
+
+### Install the MCP server (required for tools)
 
 If the FlowZap MCP server is not already configured, install it:
 
 ```bash
 # Claude Code
-claude mcp add --transport stdio flowzap -- npx flowzap-mcp@1.3.6
+claude mcp add --transport stdio flowzap -- npx -y flowzap-mcp@1.3.6
 
 # Or add to .mcp.json / claude_desktop_config.json / cursor / windsurf config:
 {
   "mcpServers": {
     "flowzap": {
       "command": "npx",
-      "args": ["flowzap-mcp@1.3.6"]
+      "args": ["-y", "flowzap-mcp@1.3.6"]
     }
   }
 }
@@ -58,6 +107,10 @@ Compatible tools: Claude Desktop, Claude Code, Cursor, Windsurf, OpenAI Codex,
 Warp, Zed, Cline, Roo Code, Continue.dev, Sourcegraph Cody.
 
 **Not compatible:** Replit, Lovable.dev.
+
+Without the MCP server, this skill can still help an agent draft FlowZap Code,
+but it cannot validate diagrams, create playground URLs, or use the FlowZap
+tooling workflow described below.
 
 ## Available MCP tools
 
@@ -174,6 +227,13 @@ Full MCP documentation: [flowzap.xyz/docs/mcp](https://flowzap.xyz/docs/mcp)
 
 ## Security and data transparency
 
+The trust boundary is intentionally narrow:
+
+- The skill bundle is static Markdown and reference text.
+- The MCP server runs locally and only calls public FlowZap APIs.
+- Outbound traffic is restricted to `https://flowzap.xyz`.
+- Validation is stateless; playground sessions are time-limited.
+
 The `flowzap-mcp` server runs locally on the user's machine (stdio transport) and enforces the following safeguards:
 
 | Control | Detail |
@@ -189,12 +249,17 @@ The `flowzap-mcp` server runs locally on the user's machine (stdio transport) an
 
 ### Data flow scope
 
-The MCP server sends only the FlowZap Code provided by the agent to two public endpoints:
+The MCP server processes raw inputs locally and sends only generated or agent-provided FlowZap Code to FlowZap public endpoints:
 
 1. `POST https://flowzap.xyz/api/validate` — returns syntax validation result
 2. `POST https://flowzap.xyz/api/playground/create` — returns an ephemeral playground URL (60-minute TTL, non-guessable token)
 
-No other data (file paths, environment variables, user identity) is transmitted.
+If the agent uses `flowzap_artifact_to_diagram`, the raw HTTP logs, OpenAPI spec,
+or code snippet are parsed locally inside the MCP package first. Only the
+resulting FlowZap Code is sent when a playground URL is created.
+
+No local file paths, environment variables, user identity, repository contents,
+or credentials are transmitted by the MCP package.
 
 ### Playground URL access controls
 
