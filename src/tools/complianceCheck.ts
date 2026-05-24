@@ -158,7 +158,7 @@ export async function handleComplianceCheck(
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "User-Agent": "flowzap-mcp/1.4.1",
+        "User-Agent": "flowzap-mcp/1.4.2",
         "X-MCP-Client": "flowzap-mcp",
       },
       body: JSON.stringify({ code: sanitizedCode, lng }),
