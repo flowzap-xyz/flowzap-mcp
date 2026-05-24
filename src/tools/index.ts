@@ -14,3 +14,5 @@ export { diffTool, applyChangeTool, handleDiff, handleApplyChange, diffCode, app
 export type { DiffResult, PatchOperation } from "./diffAndApply.js";
 
 export { createPlaygroundUrl } from "./playgroundApi.js";
+
+export { complianceCheckTool, handleComplianceCheck } from "./complianceCheck.js";

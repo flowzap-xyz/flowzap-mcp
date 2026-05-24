@@ -73,14 +73,14 @@ If the FlowZap MCP server is not already configured, install it:
 
 ```bash
 # Claude Code
-claude mcp add --transport stdio flowzap -- npx -y flowzap-mcp@1.3.6
+claude mcp add --transport stdio flowzap -- npx -y flowzap-mcp@1.4.0
 
 # Or add to .mcp.json / claude_desktop_config.json / cursor / windsurf config:
 {
   "mcpServers": {
     "flowzap": {
       "command": "npx",
-      "args": ["-y", "flowzap-mcp@1.3.6"]
+      "args": ["-y", "flowzap-mcp@1.4.0"]
     }
   }
 }
@@ -88,19 +88,19 @@ claude mcp add --transport stdio flowzap -- npx -y flowzap-mcp@1.3.6
 
 ### Package verification
 
-The pinned version `1.3.6` can be verified against the npm registry:
+The pinned version `1.4.0` can be verified against the npm registry:
 
 | Field | Value |
 |-------|-------|
-| **npm** | [flowzap-mcp@1.3.6](https://www.npmjs.com/package/flowzap-mcp/v/1.3.6) |
-| **Integrity (SHA-512)** | `sha512-9pnsETVvbCj5+cDEbiwRBWbqaA+FDMIJFU/vylXCnJOAt6nuvlFQf3/M8WI6EeBoVtGw/OyBZtJTQSjFUh4U0w==` |
-| **Shasum** | `86a434a49f4ec9e6fae76cc34acb73f357e81b1f` |
+| **npm** | [flowzap-mcp@1.4.0](https://www.npmjs.com/package/flowzap-mcp/v/1.4.0) |
+| **Integrity (SHA-512)** | `sha512-A7iRAtjjhoy7TBSCB/y4l9B91V0vvhSGnDiVmEzOuxNbNvWPPnWQq+bEHnX4vR3m4vdGsYuTgdHaoS3qfxUApg==` |
+| **Shasum** | `c016cf5ba398443616afd1c0e374e6f1ccf021ed` |
 | **Source** | [github.com/flowzap-xyz/flowzap-mcp](https://github.com/flowzap-xyz/flowzap-mcp) |
 | **License** | MIT |
 
 To verify locally before use:
 ```bash
-npm view flowzap-mcp@1.3.6 dist.integrity dist.shasum
+npm view flowzap-mcp@1.4.0 dist.integrity dist.shasum
 ```
 
 Compatible tools: Claude Desktop, Claude Code, Cursor, Windsurf, OpenAI Codex,
@@ -123,6 +123,7 @@ tooling workflow described below.
 | `flowzap_artifact_to_diagram` | Parse HTTP logs / OpenAPI / code → diagram + playground URL |
 | `flowzap_diff` | Structured diff between two .fz versions |
 | `flowzap_apply_change` | Patch a diagram (insert/remove/update nodes/edges) |
+| `flowzap_compliance_check` | Automated SOC2/GDPR/PIPL compliance analysis on data-flow diagrams (Deepseek LLM; 3/day per IP, 1/hour burst, global circuit breaker) |
 
 ## FlowZap Code DSL — quick reference
 

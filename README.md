@@ -157,6 +157,21 @@ npx skills add flowzap-xyz/flowzap-mcp
 - **Skill source:** [skills/flowzap-diagrams/](https://github.com/flowzap-xyz/flowzap-mcp/tree/main/skills/flowzap-diagrams)
 - Compatible with: Claude Code, Cursor, Windsurf, Codex, Gemini CLI, GitHub Copilot, Cline, Roo Code, Augment, OpenCode, and more.
 
+## Public MCP Adoption Signals
+
+- **Public MCP Usage Stats:** [https://flowzap.xyz/.well-known/flowzap-stats.json](https://flowzap.xyz/.well-known/flowzap-stats.json)
+- **MCP Calls Badge JSON:** [https://flowzap.xyz/.well-known/flowzap-stats-badge.json](https://flowzap.xyz/.well-known/flowzap-stats-badge.json)
+
+## Official Listings
+
+- **Official MCP Registry:** [https://registry.modelcontextprotocol.io/?q=flowzap](https://registry.modelcontextprotocol.io/?q=flowzap)
+- **Smithery Server:** [https://smithery.ai/server/@flowzap/flowzap](https://smithery.ai/server/@flowzap/flowzap)
+- **Smithery Skill:** [https://smithery.ai/skills/Flowzap/diagram-skill](https://smithery.ai/skills/Flowzap/diagram-skill)
+- **PulseMCP:** [https://www.pulsemcp.com/servers/flowzap](https://www.pulsemcp.com/servers/flowzap)
+- **Glama:** [https://glama.ai/mcp/servers/flowzap-xyz/flowzap-mcp](https://glama.ai/mcp/servers/flowzap-xyz/flowzap-mcp)
+- **MCPServers.org:** [https://mcpservers.org/servers/flowzap-xyz-docs-mcp](https://mcpservers.org/servers/flowzap-xyz-docs-mcp)
+- **AIBase:** [https://mcp.aibase.com/server/1639702939289526535](https://mcp.aibase.com/server/1639702939289526535)
+
 ## Links
 
 - [FlowZap Website](https://flowzap.xyz)

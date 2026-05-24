@@ -16,6 +16,8 @@ import {
   applyChangeTool,
   handleDiff,
   handleApplyChange,
+  complianceCheckTool,
+  handleComplianceCheck,
 } from "./tools/index.js";
 
 // =============================================================================
@@ -131,7 +133,7 @@ async function secureFetch(url: string, options: RequestInit): Promise<Response>
       signal: controller.signal,
       headers: {
         ...options.headers,
-        "User-Agent": "flowzap-mcp/1.3.6",
+        "User-Agent": "flowzap-mcp/1.4.0",
         "X-MCP-Client": "flowzap-mcp",
       },
     });
@@ -199,6 +201,7 @@ const tools: Tool[] = [
   artifactToDiagramTool,
   diffTool,
   applyChangeTool,
+  complianceCheckTool,
 ];
 
 // FlowZap Code syntax documentation
@@ -443,7 +446,7 @@ async function handleCreatePlayground(code: unknown, view?: string): Promise<str
 const server = new Server(
   {
     name: "flowzap-mcp",
-    version: "1.3.6",
+    version: "1.4.0",
   },
   {
     capabilities: {
@@ -464,7 +467,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request: any) => {
   securityLog("TOOL_CALL", { tool: name });
 
   // Validate tool name (whitelist approach)
-  const allowedTools = ["flowzap_validate", "flowzap_create_playground", "flowzap_get_syntax", "flowzap_export_graph", "flowzap_artifact_to_diagram", "flowzap_diff", "flowzap_apply_change"];
+  const allowedTools = ["flowzap_validate", "flowzap_create_playground", "flowzap_get_syntax", "flowzap_export_graph", "flowzap_artifact_to_diagram", "flowzap_diff", "flowzap_apply_change", "flowzap_compliance_check"];
   if (!allowedTools.includes(name)) {
     securityLog("UNKNOWN_TOOL", { tool: name });
     throw new Error(`Unknown tool: ${name}`);
@@ -508,6 +511,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request: any) => {
     case "flowzap_apply_change": {
       const { code, operations } = args as { code?: unknown; operations?: unknown };
       const result = await handleApplyChange(code, operations);
+      return { content: [{ type: "text", text: result }] };
+    }
+
+    case "flowzap_compliance_check": {
+      const { code, lng } = args as { code?: unknown; lng?: unknown };
+      const result = await handleComplianceCheck(code, lng);
       return { content: [{ type: "text", text: result }] };
     }
 
