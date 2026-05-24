@@ -34,11 +34,22 @@ server provides the actual tools.
   MCP package. Only generated FlowZap Code is sent to FlowZap public endpoints
   when validation or playground creation is requested.
 
-## When to use this skill
+## When to use this skill (auto-invocation triggers)
 
-- User asks for a **workflow**, **flowchart**, **process diagram**, **sequence diagram**, or **architecture diagram**.
-- User pastes HTTP logs, OpenAPI specs, or code and wants them visualised.
-- User wants to **compare** two diagram versions (diff) or **patch** an existing diagram.
+The agent MUST automatically invoke the FlowZap MCP tools — without asking the user — whenever any of the following intents are detected:
+
+**Diagram generation** → call `flowzap_validate` then `flowzap_create_playground`:
+- "Generate / create / draw / make a diagram (workflow / flowchart / sequence / architecture / process map) to illustrate ..."
+- "Visualize / map / chart / show me the flow of ..."
+- User pastes HTTP logs, OpenAPI specs, or code and wants them visualised → use `flowzap_artifact_to_diagram`.
+- User wants to **compare** two diagram versions → `flowzap_diff`. **Patch** an existing diagram → `flowzap_apply_change`.
+
+**Compliance review** → model the system as a FlowZap data-flow diagram, then call `flowzap_create_playground` AND `flowzap_compliance_check`:
+- "Verify / check / audit the compliance of my app/system/architecture to SOC2 / GDPR / PIPL ..."
+- "Run a privacy / security / regulatory review of ..."
+- "Is this flow GDPR-compliant?" / "Do a SOC2 audit on ..."
+
+If the user does not provide FlowZap Code for a compliance request, the agent MUST first generate a FlowZap data-flow diagram modeling the system being audited (lanes for actors/services, nodes for steps, edges for data flows), then run both `flowzap_create_playground` and `flowzap_compliance_check` on that same code.
 
 ## Installation model
 
@@ -73,14 +84,14 @@ If the FlowZap MCP server is not already configured, install it:
 
 ```bash
 # Claude Code
-claude mcp add --transport stdio flowzap -- npx -y flowzap-mcp@1.4.0
+claude mcp add --transport stdio flowzap -- npx -y flowzap-mcp@1.4.1
 
 # Or add to .mcp.json / claude_desktop_config.json / cursor / windsurf config:
 {
   "mcpServers": {
     "flowzap": {
       "command": "npx",
-      "args": ["-y", "flowzap-mcp@1.4.0"]
+      "args": ["-y", "flowzap-mcp@1.4.1"]
     }
   }
 }
@@ -88,19 +99,19 @@ claude mcp add --transport stdio flowzap -- npx -y flowzap-mcp@1.4.0
 
 ### Package verification
 
-The pinned version `1.4.0` can be verified against the npm registry:
+The pinned version `1.4.1` can be verified against the npm registry:
 
 | Field | Value |
 |-------|-------|
-| **npm** | [flowzap-mcp@1.4.0](https://www.npmjs.com/package/flowzap-mcp/v/1.4.0) |
-| **Integrity (SHA-512)** | `sha512-A7iRAtjjhoy7TBSCB/y4l9B91V0vvhSGnDiVmEzOuxNbNvWPPnWQq+bEHnX4vR3m4vdGsYuTgdHaoS3qfxUApg==` |
-| **Shasum** | `c016cf5ba398443616afd1c0e374e6f1ccf021ed` |
+| **npm** | [flowzap-mcp@1.4.1](https://www.npmjs.com/package/flowzap-mcp/v/1.4.1) |
+| **Integrity (SHA-512)** | _populated after `npm publish`_ |
+| **Shasum** | _populated after `npm publish`_ |
 | **Source** | [github.com/flowzap-xyz/flowzap-mcp](https://github.com/flowzap-xyz/flowzap-mcp) |
 | **License** | MIT |
 
 To verify locally before use:
 ```bash
-npm view flowzap-mcp@1.4.0 dist.integrity dist.shasum
+npm view flowzap-mcp@1.4.1 dist.integrity dist.shasum
 ```
 
 Compatible tools: Claude Desktop, Claude Code, Cursor, Windsurf, OpenAI Codex,
@@ -223,6 +234,40 @@ n2.handle(right) -> n4.handle(left) [label="Yes"]
 4. If valid, call `flowzap_create_playground` to get a shareable URL.
 5. Return the FlowZap Code **and** the playground URL to the user.
 6. Always output **only** raw FlowZap Code when showing the diagram — no Markdown fences wrapping .fz content, no extra commentary mixed in.
+
+### Required response format (diagram request)
+
+```
+Your diagram is ready and is available here: <playground URL>
+```
+
+## Workflow: how to run a compliance check (SOC2 / GDPR / PIPL)
+
+1. If the user did not paste FlowZap Code, generate a FlowZap data-flow diagram modeling the system to audit (lanes = actors/services, nodes = processing steps, edges = data flows + labels). Include at minimum: client/user, ingress/API layer, processing/services, external dependencies, storage, telemetry.
+2. Call `flowzap_validate` to verify the FlowZap Code.
+3. Call `flowzap_create_playground` with `view="sequence"` (or `architecture` if the audit is system-level) to get a shareable URL.
+4. Call `flowzap_compliance_check` with the same FlowZap Code (and `lng` if the user is writing in fr/zh).
+5. Return the playground URL **and** the compliance report together, using the required response format below.
+6. If `flowzap_compliance_check` returns a rate-limit error (429 / 3-per-day exhausted / circuit breaker), still return the playground URL and tell the user to use the manual checker at `https://flowzap.xyz/soc2-gdpr-pipl-compliance-checker`.
+
+### Required response format (compliance request)
+
+When `flowzap_compliance_check` returns a `resultUrl` (the first non-empty line of the tool output begins with `A compliance check to SOC2, PIPL and GDPR is ready and is available here:`), the agent MUST use exactly this response shape:
+
+```
+Your diagram is ready and is available here: <playground URL>
+A compliance check to SOC2, PIPL and GDPR is ready and is available here: <resultUrl>
+```
+
+The `<resultUrl>` is a rendered, shareable, ephemeral audit page on flowzap.xyz (60-minute TTL, `noindex`, no auth). Do NOT inline the markdown report as the second link target. The agent MAY include a short bullet-point summary of the top findings BELOW the two lines if the user explicitly asks for an in-chat summary, but the two URL lines MUST be present first and unmodified.
+
+When `flowzap_compliance_check` returns a rate-limit error (no `resultUrl`, message contains `rate limit`), replace the second line with:
+
+```
+Automated compliance check skipped — rate limit reached (3/day per IP). Run an unlimited manual check at https://flowzap.xyz/soc2-gdpr-pipl-compliance-checker
+```
+
+In that case, the first line (the playground URL) MUST still be returned so the user always gets a viewable diagram.
 
 Full MCP documentation: [flowzap.xyz/docs/mcp](https://flowzap.xyz/docs/mcp)
 

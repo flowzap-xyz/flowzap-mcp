@@ -19,7 +19,7 @@ export async function createPlaygroundUrl(code: string): Promise<{ url?: string;
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "User-Agent": "flowzap-mcp/1.4.0",
+        "User-Agent": "flowzap-mcp/1.4.1",
         "X-MCP-Client": "flowzap-mcp",
       },
       body: JSON.stringify({ code, source: 'mcp' }),

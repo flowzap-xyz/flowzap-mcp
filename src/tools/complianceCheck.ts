@@ -66,6 +66,22 @@ interface ComplianceResponse {
   error?: string;
   code?: string;
   retryAfter?: number;
+  resultUrl?: string | null;
+  tokenExpiresAt?: string | null;
+}
+
+const ALLOWED_RESULT_HOST = "flowzap.xyz";
+
+function isSafeResultUrl(url: string | null | undefined): url is string {
+  if (!url || typeof url !== "string") return false;
+  try {
+    const u = new URL(url);
+    if (u.protocol !== "https:") return false;
+    // Allow only the production host (and subdomains) to prevent open-redirect-style leaks.
+    return u.hostname === ALLOWED_RESULT_HOST || u.hostname.endsWith(`.${ALLOWED_RESULT_HOST}`);
+  } catch {
+    return false;
+  }
 }
 
 function renderFindings(findings: ComplianceFinding[]): string {
@@ -84,7 +100,18 @@ function renderFindings(findings: ComplianceFinding[]): string {
 
 function renderMarkdown(payload: ComplianceResponse): string {
   const fw = payload.frameworks || {};
-  const sections: string[] = ["# Compliance Check Results (SOC2 · GDPR · PIPL)\n"];
+  const sections: string[] = [];
+
+  // Lead with the shareable rendered-result URL when available so agents (and end users)
+  // can deep-link directly to a styled audit page instead of relying on inline markdown.
+  if (isSafeResultUrl(payload.resultUrl)) {
+    sections.push(
+      `A compliance check to SOC2, PIPL and GDPR is ready and is available here: ${payload.resultUrl}`,
+    );
+    sections.push("");
+  }
+
+  sections.push("# Compliance Check Results (SOC2 · GDPR · PIPL)\n");
   for (const key of ["gdpr", "soc2", "pipl"] as const) {
     const findings = fw[key]?.findings || [];
     sections.push(`## ${FRAMEWORK_LABELS[key]} (${findings.length} finding${findings.length === 1 ? "" : "s"})`);
@@ -131,7 +158,7 @@ export async function handleComplianceCheck(
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "User-Agent": "flowzap-mcp/1.4.0",
+        "User-Agent": "flowzap-mcp/1.4.1",
         "X-MCP-Client": "flowzap-mcp",
       },
       body: JSON.stringify({ code: sanitizedCode, lng }),

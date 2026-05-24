@@ -133,7 +133,7 @@ async function secureFetch(url: string, options: RequestInit): Promise<Response>
       signal: controller.signal,
       headers: {
         ...options.headers,
-        "User-Agent": "flowzap-mcp/1.4.0",
+        "User-Agent": "flowzap-mcp/1.4.1",
         "X-MCP-Client": "flowzap-mcp",
       },
     });
@@ -446,7 +446,7 @@ async function handleCreatePlayground(code: unknown, view?: string): Promise<str
 const server = new Server(
   {
     name: "flowzap-mcp",
-    version: "1.4.0",
+    version: "1.4.1",
   },
   {
     capabilities: {
