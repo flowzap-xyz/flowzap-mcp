@@ -299,6 +299,7 @@ The MCP server processes raw inputs locally and sends only generated or agent-pr
 
 1. `POST https://flowzap.xyz/api/validate` — returns syntax validation result
 2. `POST https://flowzap.xyz/api/playground/create` — returns an ephemeral playground URL (60-minute TTL, non-guessable token)
+3. `POST https://flowzap.xyz/api/compliance-check` — returns SOC2/GDPR/PIPL compliance audit with shareable result URL (60-minute TTL). Backed by Deepseek LLM.
 
 If the agent uses `flowzap_artifact_to_diagram`, the raw HTTP logs, OpenAPI spec,
 or code snippet are parsed locally inside the MCP package first. Only the
@@ -336,5 +337,5 @@ The playground session is stored server-side with a cryptographic token (UUID v4
 - [JSON syntax schema](https://flowzap.xyz/api/flowzap-code-schema.json)
 - [200+ workflow templates](https://flowzap.xyz/templates)
 - [MCP server docs](https://flowzap.xyz/docs/mcp)
-- [npm package — flowzap-mcp v1.3.6](https://www.npmjs.com/package/flowzap-mcp)
+- [npm package — flowzap-mcp v1.4.3](https://www.npmjs.com/package/flowzap-mcp)
 - [GitHub](https://github.com/flowzap-xyz/flowzap-mcp)
