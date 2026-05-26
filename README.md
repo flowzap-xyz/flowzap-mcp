@@ -1,5 +1,7 @@
 # FlowZap MCP Server
 
+[![npm version](https://img.shields.io/npm/v/flowzap-mcp)](https://www.npmjs.com/package/flowzap-mcp) [![MCP](https://img.shields.io/badge/MCP-1.4.3-purple)](https://flowzap.xyz/docs/mcp)
+
 Create workflow, sequence, and architecture diagrams using AI assistants like Claude, Cursor, Windsurf, and 8 other MCP-compatible tools.
 
 [FlowZap](https://flowzap.xyz) is a visual workflow diagramming tool with a text-based DSL called **FlowZap Code**. This MCP server lets AI assistants create diagrams for you.
@@ -76,6 +78,11 @@ All tools use the same JSON configuration format:
 | `flowzap_diff` | Compare two versions of FlowZap Code and get structured diff |
 | `flowzap_apply_change` | Apply structured patch operations (insert/remove/update nodes/edges) |
 
+### Compliance Tool
+| Tool | Description |
+|------|-------------|
+| `flowzap_compliance_check` | Run automated SOC2, GDPR, and PIPL compliance analysis on a FlowZap Code data-flow diagram. Backed by Deepseek LLM with strict rate limits (3/day per IP, 1/hour burst, global 5-min circuit breaker). Returns a shareable ephemeral result URL (60-min TTL). |
+
 ## Usage Examples
 
 ### Basic Diagram Creation
@@ -112,6 +119,12 @@ The agent uses `flowzap_diff` to compare old and new code.
 ```
 The agent uses `flowzap_apply_change` with a structured patch instead of regenerating.
 
+**Compliance Audit:**
+```
+"Check my data flow diagram for SOC2, GDPR, and PIPL compliance."
+```
+The agent uses `flowzap_compliance_check` to run an automated audit and returns a shareable result page.
+
 The assistant will:
 1. Generate FlowZap Code based on your description
 2. Validate the code
@@ -135,6 +148,16 @@ fulfillment { # Fulfillment
   n4.handle(top) -> sales.n5.handle(bottom) [label="Approved"]
 }
 ```
+
+## Public API Endpoints
+
+These endpoints are available for external integrations (no authentication required):
+
+| Endpoint | Method | Rate Limit | Description |
+|----------|--------|------------|-------------|
+| `/api/validate` | POST | 30/min | Validate FlowZap Code syntax |
+| `/api/playground/create` | POST | 5/min, 50/day | Create ephemeral playground URL (15-min TTL) |
+| `/api/compliance-check` | POST | 5/min, 30/day | Run SOC2/GDPR/PIPL compliance analysis on FlowZap Code. Returns frameworks + shareable result URL (60-min TTL). Backed by Deepseek LLM. |
 
 ## Security
 
