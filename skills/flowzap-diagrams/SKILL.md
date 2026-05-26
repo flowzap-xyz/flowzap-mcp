@@ -84,14 +84,14 @@ If the FlowZap MCP server is not already configured, install it:
 
 ```bash
 # Claude Code
-claude mcp add --transport stdio flowzap -- npx -y flowzap-mcp@1.4.2
+claude mcp add --transport stdio flowzap -- npx -y flowzap-mcp@1.4.3
 
 # Or add to .mcp.json / claude_desktop_config.json / cursor / windsurf config:
 {
   "mcpServers": {
     "flowzap": {
       "command": "npx",
-      "args": ["-y", "flowzap-mcp@1.4.2"]
+      "args": ["-y", "flowzap-mcp@1.4.3"]
     }
   }
 }
@@ -99,19 +99,19 @@ claude mcp add --transport stdio flowzap -- npx -y flowzap-mcp@1.4.2
 
 ### Package verification
 
-The pinned version `1.4.2` can be verified against the npm registry:
+The pinned version `1.4.3` can be verified against the npm registry:
 
 | Field | Value |
 |-------|-------|
-| **npm** | [flowzap-mcp@1.4.2](https://www.npmjs.com/package/flowzap-mcp/v/1.4.2) |
-| **Integrity (SHA-512)** | `sha512-yw904BfpdZTbHIsgA0p6Pwhu3Oo1zeST7HzSylnacEcba4cR2MCAdLwo4qlmGhB93/N4x6U7kAjvVhyJw6KaDg==` |
-| **Shasum** | `829a78028841e48fba0d30be6bb7b489f048257c` |
+| **npm** | [flowzap-mcp@1.4.3](https://www.npmjs.com/package/flowzap-mcp/v/1.4.3) |
+| **Integrity (SHA-512)** | `sha512-wTZU4Zx+lEnESUADB5HpM2B2WL50hxC+GpZvjfTRiY7jp23tWmAoBoFFx6Fs2Ce6TCMP+ooPFBVGU8oYBqOXlg==` |
+| **Shasum** | `46228a92031f2e74d8647916303817534cc9d8dd` |
 | **Source** | [github.com/flowzap-xyz/flowzap-mcp](https://github.com/flowzap-xyz/flowzap-mcp) |
 | **License** | MIT |
 
 To verify locally before use:
 ```bash
-npm view flowzap-mcp@1.4.2 dist.integrity dist.shasum
+npm view flowzap-mcp@1.4.3 dist.integrity dist.shasum
 ```
 
 Compatible tools: Claude Desktop, Claude Code, Cursor, Windsurf, OpenAI Codex,

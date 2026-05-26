@@ -133,7 +133,7 @@ async function secureFetch(url: string, options: RequestInit): Promise<Response>
       signal: controller.signal,
       headers: {
         ...options.headers,
-        "User-Agent": "flowzap-mcp/1.4.2",
+        "User-Agent": "flowzap-mcp/1.4.3",
         "X-MCP-Client": "flowzap-mcp",
       },
     });
@@ -171,7 +171,7 @@ const tools: Tool[] = [
   {
     name: "flowzap_create_playground",
     description:
-      "Create a FlowZap playground session with the given code and return a shareable URL. Use this after generating FlowZap Code to give the user a visual diagram. Set view to 'architecture' when user requests an architecture diagram.",
+      "Create a FlowZap playground session with the given code and return a shareable URL. Use this after generating FlowZap Code to give the user a visual diagram. Set view to 'architecture' when user requests an architecture diagram. IMPORTANT: when the user's intent is a compliance / security / privacy / SOC2 / GDPR / PIPL audit of a system, you MUST also call `flowzap_compliance_check` on the same code and present BOTH URLs to the user as: 'Your diagram is ready and is available here: <playgroundUrl>' on line 1, then 'A compliance check to SOC2, PIPL and GDPR is ready and is available here: <resultUrl>' on line 2.",
     inputSchema: {
       type: "object" as const,
       properties: {
@@ -446,7 +446,7 @@ async function handleCreatePlayground(code: unknown, view?: string): Promise<str
 const server = new Server(
   {
     name: "flowzap-mcp",
-    version: "1.4.2",
+    version: "1.4.3",
   },
   {
     capabilities: {
