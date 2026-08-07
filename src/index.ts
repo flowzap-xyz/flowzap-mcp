@@ -18,6 +18,14 @@ import {
   handleApplyChange,
   complianceCheckTool,
   handleComplianceCheck,
+  mindmapValidateTool,
+  mindmapApproveTool,
+  mindmapTemplateTool,
+  mindmapCreatePlaygroundTool,
+  handleMindmapValidate,
+  handleMindmapApprove,
+  handleMindmapTemplate,
+  handleMindmapCreatePlayground,
 } from "./tools/index.js";
 
 // =============================================================================
@@ -181,8 +189,8 @@ const tools: Tool[] = [
         },
         view: {
           type: "string",
-          enum: ["workflow", "sequence", "architecture"],
-          description: "View mode for the diagram. Use 'architecture' for architecture diagrams, 'sequence' for sequence diagrams, 'workflow' (default) for workflow diagrams.",
+          enum: ["workflow", "sequence", "architecture", "mindmap"],
+          description: "View mode for the diagram. Use 'architecture' for architecture diagrams, 'sequence' for sequence diagrams, 'workflow' (default) for workflow diagrams, 'mindmap' for mind map view.",
         },
       },
       required: ["code"],
@@ -202,6 +210,10 @@ const tools: Tool[] = [
   diffTool,
   applyChangeTool,
   complianceCheckTool,
+  mindmapValidateTool,
+  mindmapApproveTool,
+  mindmapTemplateTool,
+  mindmapCreatePlaygroundTool,
 ];
 
 // FlowZap Code syntax documentation
@@ -365,7 +377,7 @@ async function createPlayground(rawCode: unknown, view?: string): Promise<any> {
   }
   
   const code = sanitized.code!;
-  const validViews = ["workflow", "sequence", "architecture"];
+  const validViews = ["workflow", "sequence", "architecture", "mindmap"];
   const safeView = view && validViews.includes(view) ? view : undefined;
   securityLog("API_CALL", { endpoint: "playground/create", codeLength: code.length, view: safeView });
   
@@ -428,7 +440,7 @@ async function handleCreatePlayground(code: unknown, view?: string): Promise<str
     // Create playground with optional view parameter
     const result = await createPlayground(code, view);
     if (result.url) {
-      const viewLabel = view === "architecture" ? "Architecture Diagram" : view === "sequence" ? "Sequence Diagram" : "Diagram";
+      const viewLabel = view === "architecture" ? "Architecture Diagram" : view === "sequence" ? "Sequence Diagram" : view === "mindmap" ? "Mind Map" : "Diagram";
       return `Your diagram was created successfully.\nView your ${viewLabel}: ${result.url}`;
     } else if (result.error) {
       return `❌ Failed to create playground: ${result.error}`;
@@ -446,7 +458,7 @@ async function handleCreatePlayground(code: unknown, view?: string): Promise<str
 const server = new Server(
   {
     name: "flowzap-mcp",
-    version: "1.4.3",
+      version: "2.0.0",
   },
   {
     capabilities: {
@@ -467,7 +479,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request: any) => {
   securityLog("TOOL_CALL", { tool: name });
 
   // Validate tool name (whitelist approach)
-  const allowedTools = ["flowzap_validate", "flowzap_create_playground", "flowzap_get_syntax", "flowzap_export_graph", "flowzap_artifact_to_diagram", "flowzap_diff", "flowzap_apply_change", "flowzap_compliance_check"];
+  const allowedTools = ["flowzap_validate", "flowzap_create_playground", "flowzap_get_syntax", "flowzap_export_graph", "flowzap_artifact_to_diagram", "flowzap_diff", "flowzap_apply_change", "flowzap_compliance_check", "flowzap_mindmap_validate", "flowzap_mindmap_approve", "flowzap_mindmap_template", "flowzap_mindmap_create_playground"];
   if (!allowedTools.includes(name)) {
     securityLog("UNKNOWN_TOOL", { tool: name });
     throw new Error(`Unknown tool: ${name}`);
@@ -517,6 +529,27 @@ server.setRequestHandler(CallToolRequestSchema, async (request: any) => {
     case "flowzap_compliance_check": {
       const { code, lng } = args as { code?: unknown; lng?: unknown };
       const result = await handleComplianceCheck(code, lng);
+      return { content: [{ type: "text", text: result }] };
+    }
+
+    case "flowzap_mindmap_validate": {
+      const code = (args as { code?: unknown })?.code;
+      const result = await handleMindmapValidate(code);
+      return { content: [{ type: "text", text: result }] };
+    }
+    case "flowzap_mindmap_approve": {
+      const code = (args as { code?: unknown })?.code;
+      const result = handleMindmapApprove(code);
+      return { content: [{ type: "text", text: result }] };
+    }
+    case "flowzap_mindmap_template": {
+      const { topic, branches, depth } = args as { topic?: unknown; branches?: unknown; depth?: unknown };
+      const result = handleMindmapTemplate(topic, branches, depth);
+      return { content: [{ type: "text", text: result }] };
+    }
+    case "flowzap_mindmap_create_playground": {
+      const code = (args as { code?: unknown })?.code;
+      const result = await handleMindmapCreatePlayground(code);
       return { content: [{ type: "text", text: result }] };
     }
 

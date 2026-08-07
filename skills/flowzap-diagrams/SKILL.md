@@ -136,6 +136,43 @@ tooling workflow described below.
 | `flowzap_apply_change` | Patch a diagram (insert/remove/update nodes/edges) |
 | `flowzap_compliance_check` | Automated SOC2/GDPR/PIPL compliance analysis on data-flow diagrams (Deepseek LLM; 3/day per IP, 1/hour burst, global circuit breaker) |
 
+### Mind Map Tools
+
+| Tool | Purpose |
+|------|---------|
+| `flowzap_mindmap_validate` | Validate code + check mind-map readiness (API call) |
+| `flowzap_mindmap_approve` | Structured ERROR/WARNING/INFO verdict for mind map (client-side) |
+| `flowzap_mindmap_template` | Generate a parametric tree skeleton (client-side) |
+| `flowzap_mindmap_create_playground` | Create playground URL with `?view=mindmap` (API call) |
+
+### When to use Mind Map tools (auto-invocation triggers)
+
+The agent MUST use the `flowzap_mindmap_*` tools — without asking the user — whenever any of the following intents are detected:
+
+**EN triggers:** "mind map", "mindmap", "concept map", "brainstorm map", "idea map"
+**FR triggers:** "carte mentale", "carte heuristique", "schéma heuristique", "arborescence", "carte conceptuelle"
+**ZH triggers:** "思维导图", "脑图", "心智图", "概念图"
+
+### Mind Map workflow
+
+1. (Optional) Call `flowzap_mindmap_template` with `{ topic, branches, depth }` to get a skeleton.
+2. Extend the skeleton with the user's content (replace placeholder labels, add/remove branches).
+3. Call `flowzap_mindmap_validate` to check syntax + mind-map readiness.
+4. Call `flowzap_mindmap_approve` for mind-map-specific checks (diamonds/taskboxes = ERROR).
+5. Call `flowzap_mindmap_create_playground` to get a shareable URL with `?view=mindmap`.
+6. Return: `Your mind map is ready and is available here: <URL>`
+
+### Mind Map rules
+
+- Only `circle` (root) and `rectangle` (branches) shapes are rendered
+- `diamond` and `taskbox` are NOT rendered (ERROR)
+- Only the FIRST circle is the central root; additional circles are omitted (WARNING)
+- Edge directions (`->`) are ignored by the renderer — connectivity determines the tree
+- Cross-links between branches are supported and encouraged
+- Size/depth/label warnings are advisory only
+
+IMPORTANT: Mind Map tools are completely separate from the triple-view (workflow/sequence/architecture) tools. The existing `flowzap_validate` and `flowzap_create_playground` must NOT be used for mind maps.
+
 ## FlowZap Code DSL — quick reference
 
 FlowZap Code is **not** Mermaid, **not** PlantUML. It is a unique DSL offering a simple syntax for a triple-view option to workflow, sequence and architecture diagrams.

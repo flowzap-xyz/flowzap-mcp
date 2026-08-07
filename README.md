@@ -1,6 +1,6 @@
 # FlowZap MCP Server
 
-[![npm version](https://img.shields.io/npm/v/flowzap-mcp)](https://www.npmjs.com/package/flowzap-mcp) [![MCP](https://img.shields.io/badge/MCP-1.4.3-purple)](https://flowzap.xyz/docs/mcp)
+[![npm version](https://img.shields.io/npm/v/flowzap-mcp)](https://www.npmjs.com/package/flowzap-mcp) [![MCP](https://img.shields.io/badge/MCP-2.0.0-purple)](https://flowzap.xyz/docs/mcp)
 
 Create workflow, sequence, and architecture diagrams using AI assistants like Claude, Cursor, Windsurf, and 8 other MCP-compatible tools.
 
@@ -83,6 +83,14 @@ All tools use the same JSON configuration format:
 |------|-------------|
 | `flowzap_compliance_check` | Run automated SOC2, GDPR, and PIPL compliance analysis on a FlowZap Code data-flow diagram. Backed by Deepseek LLM with strict rate limits (3/day per IP, 1/hour burst, global 5-min circuit breaker). Returns a shareable ephemeral result URL (60-min TTL). |
 
+### Mind Map Tools
+| Tool | Description |
+|------|-------------|
+| `flowzap_mindmap_validate` | Validate FlowZap Code syntax and mind-map readiness |
+| `flowzap_mindmap_approve` | Check if code is suitable for Mind Map rendering (diamonds/taskboxes = ERROR) |
+| `flowzap_mindmap_template` | Generate a ready-to-extend Mind Map tree skeleton |
+| `flowzap_mindmap_create_playground` | Create a playground URL with `?view=mindmap` |
+
 ## Usage Examples
 
 ### Basic Diagram Creation
@@ -124,6 +132,12 @@ The agent uses `flowzap_apply_change` with a structured patch instead of regener
 "Check my data flow diagram for SOC2, GDPR, and PIPL compliance."
 ```
 The agent uses `flowzap_compliance_check` to run an automated audit and returns a shareable result page.
+
+**Mind Map Creation:**
+```
+"Create a mind map about AI agent architecture"
+```
+The agent uses `flowzap_mindmap_template` to generate a skeleton, then validates and creates a playground with `?view=mindmap`.
 
 The assistant will:
 1. Generate FlowZap Code based on your description

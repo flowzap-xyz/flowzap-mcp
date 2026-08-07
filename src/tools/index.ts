@@ -16,3 +16,5 @@ export type { DiffResult, PatchOperation } from "./diffAndApply.js";
 export { createPlaygroundUrl } from "./playgroundApi.js";
 
 export { complianceCheckTool, handleComplianceCheck } from "./complianceCheck.js";
+
+export { mindmapValidateTool, mindmapApproveTool, mindmapTemplateTool, mindmapCreatePlaygroundTool, handleMindmapValidate, handleMindmapApprove, handleMindmapTemplate, handleMindmapCreatePlayground } from "./mindmapTools.js";
