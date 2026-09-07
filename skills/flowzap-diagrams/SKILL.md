@@ -1,8 +1,8 @@
 ---
 name: flowzap-diagrams
 description: >
-  Generate, validate and publish workflow, sequence and architecture diagrams, using FlowZap Code DSL.
-  Use when the user asks to create a workflow, flowchart, sequence diagram, process map or an architecture diagram.
+  Generate, validate and publish workflow, sequence, architecture and mind map diagrams, using FlowZap Code DSL.
+  Use when the user asks to create a workflow, flowchart, sequence diagram, process map, mind map or an architecture diagram.
   Produces .fz code and instant shareable playground URLs via the FlowZap MCP server.
 tags:
   - workflow
@@ -84,14 +84,14 @@ If the FlowZap MCP server is not already configured, install it:
 
 ```bash
 # Claude Code
-claude mcp add --transport stdio flowzap -- npx -y flowzap-mcp@1.4.3
+claude mcp add --transport stdio flowzap -- npx -y flowzap-mcp@2.0.0
 
 # Or add to .mcp.json / claude_desktop_config.json / cursor / windsurf config:
 {
   "mcpServers": {
     "flowzap": {
       "command": "npx",
-      "args": ["-y", "flowzap-mcp@1.4.3"]
+      "args": ["-y", "flowzap-mcp@2.0.0"]
     }
   }
 }
@@ -99,19 +99,19 @@ claude mcp add --transport stdio flowzap -- npx -y flowzap-mcp@1.4.3
 
 ### Package verification
 
-The pinned version `1.4.3` can be verified against the npm registry:
+The pinned version `2.0.0` can be verified against the npm registry:
 
 | Field | Value |
 |-------|-------|
-| **npm** | [flowzap-mcp@1.4.3](https://www.npmjs.com/package/flowzap-mcp/v/1.4.3) |
-| **Integrity (SHA-512)** | `sha512-wTZU4Zx+lEnESUADB5HpM2B2WL50hxC+GpZvjfTRiY7jp23tWmAoBoFFx6Fs2Ce6TCMP+ooPFBVGU8oYBqOXlg==` |
-| **Shasum** | `46228a92031f2e74d8647916303817534cc9d8dd` |
+| **npm** | [flowzap-mcp@2.0.0](https://www.npmjs.com/package/flowzap-mcp/v/2.0.0) |
+| **Integrity (SHA-512)** | `sha512-uk1aqnrGKxJ3qUqyd54VJYKDkeziTql+wlcNwlcibRyh4h8yPzHr7wqBPe6vQi2EQpx7errc5kRG4oLssMyOCg==` |
+| **Shasum** | `492022ab18242831527df162d232fbb627fcd459` |
 | **Source** | [github.com/flowzap-xyz/flowzap-mcp](https://github.com/flowzap-xyz/flowzap-mcp) |
 | **License** | MIT |
 
 To verify locally before use:
 ```bash
-npm view flowzap-mcp@1.4.3 dist.integrity dist.shasum
+npm view flowzap-mcp@2.0.0 dist.integrity dist.shasum
 ```
 
 Compatible tools: Claude Desktop, Claude Code, Cursor, Windsurf, OpenAI Codex,
@@ -175,7 +175,7 @@ IMPORTANT: Mind Map tools are completely separate from the triple-view (workflow
 
 ## FlowZap Code DSL — quick reference
 
-FlowZap Code is **not** Mermaid, **not** PlantUML. It is a unique DSL offering a simple syntax for a triple-view option to workflow, sequence and architecture diagrams.
+FlowZap Code is **not** Mermaid, **not** PlantUML. It is a unique DSL offering a simple syntax for a quad-view option to workflow, sequence, architecture and mind map diagrams.
 
 ### Shapes (only 4)
 
@@ -374,5 +374,5 @@ The playground session is stored server-side with a cryptographic token (UUID v4
 - [JSON syntax schema](https://flowzap.xyz/api/flowzap-code-schema.json)
 - [200+ workflow templates](https://flowzap.xyz/templates)
 - [MCP server docs](https://flowzap.xyz/docs/mcp)
-- [npm package — flowzap-mcp v1.4.3](https://www.npmjs.com/package/flowzap-mcp)
+- [npm package — flowzap-mcp v2.0.0](https://www.npmjs.com/package/flowzap-mcp)
 - [GitHub](https://github.com/flowzap-xyz/flowzap-mcp)
