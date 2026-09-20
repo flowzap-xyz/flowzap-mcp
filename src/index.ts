@@ -18,6 +18,8 @@ import {
   handleApplyChange,
   complianceCheckTool,
   handleComplianceCheck,
+  fixCodeTool,
+  handleFixCode,
   mindmapValidateTool,
   mindmapApproveTool,
   mindmapTemplateTool,
@@ -170,12 +172,14 @@ const tools: Tool[] = [
       properties: {
         code: {
           type: "string",
-          description: "FlowZap Code to validate",
+          description:
+            "FlowZap Code to validate. Common shortcuts accepted: 'n1 -> n2' (handles auto-inferred) and 'n1 --> n2' (normalized). Full syntax: n1.handle(right) -> n2.handle(left).",
         },
       },
       required: ["code"],
     },
   },
+  fixCodeTool,
   {
     name: "flowzap_create_playground",
     description:
@@ -185,7 +189,8 @@ const tools: Tool[] = [
       properties: {
         code: {
           type: "string",
-          description: "FlowZap Code to load in the playground",
+          description:
+            "FlowZap Code to load in the playground. Common shortcuts accepted: 'n1 -> n2' (handles auto-inferred) and 'n1 --> n2' (normalized). Full syntax: n1.handle(right) -> n2.handle(left).",
         },
         view: {
           type: "string",
@@ -458,7 +463,7 @@ async function handleCreatePlayground(code: unknown, view?: string): Promise<str
 const server = new Server(
   {
     name: "flowzap-mcp",
-      version: "2.0.0",
+      version: "2.1.0",
   },
   {
     capabilities: {
@@ -479,7 +484,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request: any) => {
   securityLog("TOOL_CALL", { tool: name });
 
   // Validate tool name (whitelist approach)
-  const allowedTools = ["flowzap_validate", "flowzap_create_playground", "flowzap_get_syntax", "flowzap_export_graph", "flowzap_artifact_to_diagram", "flowzap_diff", "flowzap_apply_change", "flowzap_compliance_check", "flowzap_mindmap_validate", "flowzap_mindmap_approve", "flowzap_mindmap_template", "flowzap_mindmap_create_playground"];
+  const allowedTools = ["flowzap_validate", "flowzap_fix", "flowzap_create_playground", "flowzap_get_syntax", "flowzap_export_graph", "flowzap_artifact_to_diagram", "flowzap_diff", "flowzap_apply_change", "flowzap_compliance_check", "flowzap_mindmap_validate", "flowzap_mindmap_approve", "flowzap_mindmap_template", "flowzap_mindmap_create_playground"];
   if (!allowedTools.includes(name)) {
     securityLog("UNKNOWN_TOOL", { tool: name });
     throw new Error(`Unknown tool: ${name}`);
@@ -489,6 +494,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request: any) => {
     case "flowzap_validate": {
       const code = (args as { code?: unknown })?.code;
       const result = await handleValidate(code);
+      return { content: [{ type: "text", text: result }] };
+    }
+
+    case "flowzap_fix": {
+      const { code, lng } = args as { code?: unknown; lng?: unknown };
+      const result = await handleFixCode(code, lng);
       return { content: [{ type: "text", text: result }] };
     }
 

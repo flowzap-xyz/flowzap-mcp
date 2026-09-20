@@ -6,6 +6,7 @@
  */
 
 import { Tool } from "@modelcontextprotocol/sdk/types.js";
+import { normalizeEdgeSyntax } from "./edgeSyntax.js";
 
 export interface Lane {
   id: string;
@@ -77,6 +78,8 @@ export function parseToGraph(code: string): ExportedGraph {
   const edges: GraphEdge[] = [];
   const laneMap = new Map<string, Lane>();
   const nodeToLane = new Map<string, string>();
+  const nodeOrder = new Map<string, number>();
+  let nodeDefOrder = 0;
 
   let currentLane: string | null = null;
   let edgeIdx = 1;
@@ -138,39 +141,38 @@ export function parseToGraph(code: string): ExportedGraph {
 
       nodes.push(node);
       nodeToLane.set(nodeId, currentLane || "default");
+      nodeOrder.set(nodeId, nodeDefOrder++);
       continue;
     }
 
-    // Edge definition: `n1.handle(right) -> n2.handle(left) [label="text"]`
-    const edgeMatch = line.match(
-      /^(.+?)\.handle\(([^)]+)\)\s*->\s*(.+?)\.handle\(([^)]+)\)(?:\s*\[label\s*[:=]\s*"([^"]*)"\])?/
-    );
-    if (edgeMatch) {
-      const [, srcFullRaw, srcDir, tgtFullRaw, tgtDir, label] = edgeMatch;
-      
-      // Parse source (may be cross-lane: laneName.nodeId)
-      const srcParts = srcFullRaw.trim().split(".");
-      const srcNodeId = srcParts[srcParts.length - 1];
-      const srcLane = srcParts.length > 1 ? srcParts[0] : nodeToLane.get(srcNodeId);
-      
-      // Parse target (may be cross-lane: laneName.nodeId)
-      const tgtParts = tgtFullRaw.trim().split(".");
-      const tgtNodeId = tgtParts[tgtParts.length - 1];
-      const tgtLane = tgtParts.length > 1 ? tgtParts[0] : nodeToLane.get(tgtNodeId);
+    // Edge definition: accepts the canonical handle syntax plus the same
+    // agent-friendly shortcuts the validator accepts (n1 -> n2, n1 --> n2,
+    // n1.handle(right) -> n2) — see edgeSyntax.ts.
+    if (line.includes("->")) {
+      const normalized = normalizeEdgeSyntax(line, {
+        nodeLane: nodeToLane,
+        nodeOrder,
+      });
+      if (normalized) {
+        const srcNodeId = normalized.srcNodeId;
+        const tgtNodeId = normalized.tgtNodeId;
+        const srcLane = normalized.srcLane ?? nodeToLane.get(srcNodeId);
+        const tgtLane = normalized.tgtLane ?? nodeToLane.get(tgtNodeId);
 
-      const edge: GraphEdge = {
-        id: `e${edgeIdx++}`,
-        from: srcNodeId,
-        to: tgtNodeId,
-        sourceHandle: srcDir.toLowerCase(),
-        targetHandle: tgtDir.toLowerCase(),
-      };
+        const edge: GraphEdge = {
+          id: `e${edgeIdx++}`,
+          from: srcNodeId,
+          to: tgtNodeId,
+          sourceHandle: normalized.srcDir,
+          targetHandle: normalized.tgtDir,
+        };
 
-      if (srcLane) edge.fromLane = srcLane;
-      if (tgtLane) edge.toLane = tgtLane;
-      if (label) edge.label = label;
+        if (srcLane) edge.fromLane = srcLane;
+        if (tgtLane) edge.toLane = tgtLane;
+        if (normalized.label) edge.label = normalized.label;
 
-      edges.push(edge);
+        edges.push(edge);
+      }
     }
   }
 

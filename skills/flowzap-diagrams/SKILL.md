@@ -128,6 +128,7 @@ tooling workflow described below.
 | Tool | Purpose |
 |------|---------|
 | `flowzap_validate` | Check .fz syntax before sharing |
+| `flowzap_fix` | Deterministically repair mechanical .fz errors (numbering, inferred handles, label syntax, missing lane labels, emoji / control chars) and return the repaired code + applied corrections |
 | `flowzap_create_playground` | Get a shareable playground URL |
 | `flowzap_get_syntax` | Retrieve full DSL docs at runtime |
 | `flowzap_export_graph` | Export diagram as structured JSON (lanes, nodes, edges) |
@@ -135,6 +136,25 @@ tooling workflow described below.
 | `flowzap_diff` | Structured diff between two .fz versions |
 | `flowzap_apply_change` | Patch a diagram (insert/remove/update nodes/edges) |
 | `flowzap_compliance_check` | Automated SOC2/GDPR/PIPL compliance analysis on data-flow diagrams (Deepseek LLM; 3/day per IP, 1/hour burst, global circuit breaker) |
+
+### Repair tool (`flowzap_fix`)
+
+`flowzap_fix` runs a bounded, deterministic repair pass over FlowZap Code. It fixes only mechanical errors — non-sequential node numbering, inferred edge handles, wrong node/edge label syntax, missing lane display labels, emoji and non-printable characters — and returns the repaired code plus the list of corrections applied. Anything it cannot repair is reported as-is: it NEVER invents nodes, edges, or labels.
+
+#### When to use `flowzap_fix` (auto-invocation triggers)
+
+The agent MUST call `flowzap_fix` — without asking the user — whenever the user asks to repair / fix / clean up FlowZap Code, or whenever `flowzap_validate` reports only mechanical errors:
+
+**EN triggers:** "fix my code", "repair diagram", "repair my FlowZap Code", "clean up this diagram"
+**FR triggers:** "corrige mon code", "repare le diagramme", "répare le diagramme", "répare mon FlowZap Code", "nettoie ce diagramme"
+**ZH triggers:** "修复代码", "修复图表", "修好我的 FlowZap 代码", "清理这个图表"
+
+#### Repair workflow
+
+1. Call `flowzap_fix` with the code (and `lng` if the user is writing in fr/zh).
+2. Read the list of applied corrections and the repaired code from the result.
+3. If the tool lists remaining (unfixable) issues, correct those points manually — the repairer never invents content.
+4. Call `flowzap_validate` on the repaired code, then `flowzap_create_playground` once it is valid.
 
 ### Mind Map Tools
 
@@ -268,9 +288,10 @@ n2.handle(right) -> n4.handle(left) [label="Yes"]
 1. Identify the **actors/systems** (→ lanes) and **steps** (→ nodes) from the user's description.
 2. Write FlowZap Code following all rules above.
 3. Call `flowzap_validate` to verify syntax.
-4. If valid, call `flowzap_create_playground` to get a shareable URL.
-5. Return the FlowZap Code **and** the playground URL to the user.
-6. Always output **only** raw FlowZap Code when showing the diagram — no Markdown fences wrapping .fz content, no extra commentary mixed in.
+4. If validation reports mechanical errors, call `flowzap_fix`, use the repaired code, and re-validate.
+5. If valid, call `flowzap_create_playground` to get a shareable URL.
+6. Return the FlowZap Code **and** the playground URL to the user.
+7. Always output **only** raw FlowZap Code when showing the diagram — no Markdown fences wrapping .fz content, no extra commentary mixed in.
 
 ### Required response format (diagram request)
 

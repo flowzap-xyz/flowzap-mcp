@@ -17,4 +17,6 @@ export { createPlaygroundUrl } from "./playgroundApi.js";
 
 export { complianceCheckTool, handleComplianceCheck } from "./complianceCheck.js";
 
+export { fixCodeTool, handleFixCode } from "./fixCode.js";
+
 export { mindmapValidateTool, mindmapApproveTool, mindmapTemplateTool, mindmapCreatePlaygroundTool, handleMindmapValidate, handleMindmapApprove, handleMindmapTemplate, handleMindmapCreatePlayground } from "./mindmapTools.js";

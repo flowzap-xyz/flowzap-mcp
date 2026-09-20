@@ -1,14 +1,14 @@
 # FlowZap MCP Server
 
-[![npm version](https://img.shields.io/npm/v/flowzap-mcp)](https://www.npmjs.com/package/flowzap-mcp) [![MCP](https://img.shields.io/badge/MCP-2.0.0-purple)](https://flowzap.xyz/docs/mcp)
+[![npm version](https://img.shields.io/npm/v/flowzap-mcp)](https://www.npmjs.com/package/flowzap-mcp) [![MCP](https://img.shields.io/badge/MCP-2.1.0-purple)](https://flowzap.xyz/docs/mcp)
 
-Create workflow, sequence, and architecture diagrams using AI assistants like Claude, Cursor, Windsurf, and 8 other MCP-compatible tools.
+Create workflow, sequence, architecture, and mind map diagrams using AI assistants like Claude, Cursor, Windsurf, and 8 other MCP-compatible tools.
 
 [FlowZap](https://flowzap.xyz) is a visual workflow diagramming tool with a text-based DSL called **FlowZap Code**. This MCP server lets AI assistants create diagrams for you.
 
 ## What is FlowZap?
 
-FlowZap turns text prompts into triple-view diagrams (Workflow, Sequence & Architecture) using FlowZap Code DSL. It is NOT Mermaid, NOT PlantUML - it is a unique domain-specific language designed for simplicity and AI generation.
+FlowZap turns text prompts into quad-view diagrams (Workflow, Sequence, Architecture & Mind Map) using FlowZap Code DSL. It is NOT Mermaid, NOT PlantUML - it is a unique domain-specific language designed for simplicity and AI generation.
 
 **Key Facts:**
 - Only 4 shapes: `circle`, `rectangle`, `diamond`, `taskbox`
@@ -67,6 +67,7 @@ All tools use the same JSON configuration format:
 | Tool | Description |
 |------|-------------|
 | `flowzap_validate` | Validate FlowZap Code syntax |
+| `flowzap_fix` | Deterministically repair mechanical FlowZap Code errors (numbering, inferred handles, label syntax, missing lane labels, emoji/control chars) and return the repaired code plus the corrections applied |
 | `flowzap_create_playground` | Create a shareable diagram URL |
 | `flowzap_get_syntax` | Get FlowZap Code syntax documentation |
 
@@ -127,6 +128,12 @@ The agent uses `flowzap_diff` to compare old and new code.
 ```
 The agent uses `flowzap_apply_change` with a structured patch instead of regenerating.
 
+**Repair Invalid Code:**
+```
+"My FlowZap Code fails validation. Fix the mechanical errors for me."
+```
+The agent uses `flowzap_fix` to deterministically repair numbering, inferred handles, label syntax, lane labels, emoji and control characters, then validates the repaired code. Anything the repairer cannot fix is reported as-is — it never invents content.
+
 **Compliance Audit:**
 ```
 "Check my data flow diagram for SOC2, GDPR, and PIPL compliance."
@@ -170,6 +177,7 @@ These endpoints are available for external integrations (no authentication requi
 | Endpoint | Method | Rate Limit | Description |
 |----------|--------|------------|-------------|
 | `/api/validate` | POST | 30/min | Validate FlowZap Code syntax |
+| `/api/fix` | POST | 30/min | Deterministically repair mechanical FlowZap Code errors and return the repaired code + applied corrections |
 | `/api/playground/create` | POST | 5/min, 50/day | Create ephemeral playground URL (15-min TTL) |
 | `/api/compliance-check` | POST | 5/min, 30/day | Run SOC2/GDPR/PIPL compliance analysis on FlowZap Code. Returns frameworks + shareable result URL (60-min TTL). Backed by Deepseek LLM. |
 

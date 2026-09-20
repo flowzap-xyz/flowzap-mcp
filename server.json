@@ -1,20 +1,26 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.flowzap-xyz/flowzap",
-  "description": "Create workflow, sequence, and architecture diagrams via AI assistants.",
+  "description": "Create workflow, sequence, architecture, and mind map diagrams via AI assistants.",
   "repository": {
     "url": "https://github.com/flowzap-xyz/flowzap-mcp",
     "source": "github"
   },
-  "version": "1.4.3",
+  "version": "2.1.0",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "flowzap-mcp",
-      "version": "1.4.3",
+      "version": "2.1.0",
       "transport": {
         "type": "stdio"
       }
+    }
+  ],
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://flowzap.xyz/mcp"
     }
   ]
 }
