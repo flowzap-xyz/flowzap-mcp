@@ -15,6 +15,7 @@ import { Tool } from "@modelcontextprotocol/sdk/types.js";
 import { parseToGraph } from "./exportGraph.js";
 import type { GraphNode, GraphEdge } from "./exportGraph.js";
 import { createPlaygroundUrl } from "./playgroundApi.js";
+import { CLIENT_HEADERS } from "../clientMeta.js";
 
 // =============================================================================
 // SECURITY CONSTANTS (local)
@@ -57,8 +58,7 @@ async function callValidateApi(code: string): Promise<{ valid: boolean; errors: 
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "User-Agent": "flowzap-mcp/2.0.0",
-        "X-MCP-Client": "flowzap-mcp",
+        ...CLIENT_HEADERS,
       },
       body: JSON.stringify({ code }),
       signal: controller.signal,

@@ -29,6 +29,7 @@ import {
   handleMindmapTemplate,
   handleMindmapCreatePlayground,
 } from "./tools/index.js";
+import { CLIENT_HEADERS, CLIENT_VERSION } from "./clientMeta.js";
 
 // =============================================================================
 // SECURITY CONFIGURATION
@@ -143,8 +144,7 @@ async function secureFetch(url: string, options: RequestInit): Promise<Response>
       signal: controller.signal,
       headers: {
         ...options.headers,
-        "User-Agent": "flowzap-mcp/1.4.3",
-        "X-MCP-Client": "flowzap-mcp",
+        ...CLIENT_HEADERS,
       },
     });
     
@@ -161,8 +161,170 @@ function securityLog(event: string, details?: Record<string, unknown>): void {
   console.error(`[SECURITY] ${event}`, details ? JSON.stringify(details) : "");
 }
 
+// ---------------------------------------------------------------------------
+// Tool metadata: single source of truth (title, description, annotations).
+// Mirrors flowzap-tool-annotations.json. readOnlyHint = NOT sideEffects, as
+// published per tool in /.well-known/capabilities.json: 9 read-only, 4 write.
+// ---------------------------------------------------------------------------
+const TOOL_META: Record<string, { title: string; description: string; annotations: Record<string, unknown> }> = {
+  "flowzap_get_syntax": {
+    "title": "Get FlowZap Code Syntax",
+    "description": "Returns the complete FlowZap Code DSL reference: lane, node, edge and loop grammar, the four allowed shapes, handle syntax and the ordering rules a diagram must satisfy. Call once before writing your first diagram, or when a validation error cites a rule you do not know. Takes no arguments and returns text only; it never validates your code, so pair it with flowzap_validate.",
+    "annotations": {
+      "title": "Get FlowZap Code Syntax",
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  "flowzap_validate": {
+    "title": "Validate FlowZap Code",
+    "description": "Parses FlowZap Code and returns line-by-line errors and warnings plus structural stats (lanes, nodes, edges). Call it on any code you generated or edited before rendering it, and re-call it after flowzap_fix to confirm the repair. It reads nothing but the code you pass: no diagram is created and nothing is stored. Typo-level defects (edge syntax, undefined node references, non-sequential node IDs) are the class it catches.",
+    "annotations": {
+      "title": "Validate FlowZap Code",
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  "flowzap_fix": {
+    "title": "Repair FlowZap Code",
+    "description": "Deterministically repairs mechanical FlowZap Code defects: non-sequential node numbering, missing or inferred edge handles, node and edge label syntax, missing lane display labels, and emoji or non-printable characters. Returns the repaired code plus the list of corrections applied. Use it after flowzap_validate reports one of those mechanical codes. It never invents nodes, edges or content, so semantic errors (a missing step, a wrong ordering) are reported unchanged and must be fixed in the code itself.",
+    "annotations": {
+      "title": "Repair FlowZap Code",
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  "flowzap_create_playground": {
+    "title": "Create Shareable Diagram",
+    "description": "Validates the code and creates a shareable interactive diagram URL that the user can open in the workflow, sequence or architecture view. Use it once your code passes flowzap_validate and the user wants to see, edit or share the diagram. Side effects: it publishes a public read-only page and returns its URL; the session expires 60 minutes after creation, so the URL is not durable. The response also carries an advisory quality block (unreachable step, several start nodes, dead end); the diagram is created regardless, so fix the code and call again if that block is non-empty.",
+    "annotations": {
+      "title": "Create Shareable Diagram",
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  "flowzap_export_graph": {
+    "title": "Export Diagram as Graph",
+    "description": "Parses FlowZap Code into a structured JSON graph of lanes, nodes and edges for programmatic analysis, transformation or hand-off to another system. Use it instead of parsing the DSL yourself when you need the structure rather than a rendered picture. It reads only the code you pass and returns no URL and no rendering.",
+    "annotations": {
+      "title": "Export Diagram as Graph",
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  "flowzap_artifact_to_diagram": {
+    "title": "Convert Logs or Specs to Diagram",
+    "description": "Turns an HTTP log, an OpenAPI specification or a code snippet into FlowZap Code and a shareable diagram URL. Use it when the input is a machine artifact rather than a description in prose, and you want the resulting call or dependency flow drawn. Side effects: it publishes a public diagram page with a 60-minute session lifetime. The conversion is structural, so call flowzap_validate on the returned code before relying on it for anything but reading.",
+    "annotations": {
+      "title": "Convert Logs or Specs to Diagram",
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  "flowzap_diff": {
+    "title": "Compare Diagram Versions",
+    "description": "Compares two versions of FlowZap Code and returns a structured diff of the nodes, edges and lanes added, removed or updated. Use it to review what a change actually did before you create or replace a diagram. It reads both inputs and creates nothing; it does not judge whether either version is valid, so validate separately.",
+    "annotations": {
+      "title": "Compare Diagram Versions",
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  "flowzap_apply_change": {
+    "title": "Patch an Existing Diagram",
+    "description": "Applies structured patch operations (insert, remove or update nodes and edges) to existing FlowZap Code, then renumbers and repairs the result before rendering it. Use it to edit a diagram incrementally instead of regenerating it, which preserves node IDs and layout the user has already seen. Side effects: it overwrites the diagram content and publishes a public page with a 60-minute session lifetime. The response lists the operations actually applied and the ones skipped with their reason; when no operation applies or the patched code is still invalid, no page is created and no URL is returned: a response without a URL means no page exists.",
+    "annotations": {
+      "title": "Patch an Existing Diagram",
+      "readOnlyHint": false,
+      "destructiveHint": true,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  },
+  "flowzap_compliance_check": {
+    "title": "Review Diagram Compliance",
+    "description": "Runs an architectural compliance review of a FlowZap data-flow diagram against SOC2, GDPR, PIPL and EU AI Act controls, and returns a Markdown report of findings per framework whose elements are detectable in the diagram, plus the URL of a rendered report when the service issues one. Use it when the user asks whether a data flow is compliant, not as a legal opinion: the output is an advisory architectural review, not legal advice, and it cannot see systems the diagram does not model. Limitations: the analysis is produced by an external LLM processor (DeepSeek, disclosed under GDPR Art. 13); calls are governed by a per-client quota, and a call beyond it returns the error code RATE_LIMITED with retryAfterSeconds instead of a report.",
+    "annotations": {
+      "title": "Review Diagram Compliance",
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": true
+    }
+  },
+  "flowzap_mindmap_validate": {
+    "title": "Validate Mind Map Code",
+    "description": "Validates FlowZap Code syntax and additionally checks whether the code is renderable as a mind map: no diamonds or taskboxes, at least one circle as root, at least one rectangle as branch. Use it as the gate before flowzap_mindmap_approve or flowzap_mindmap_create_playground. It only reports and creates nothing; for a general syntax check use flowzap_validate instead.",
+    "annotations": {
+      "title": "Validate Mind Map Code",
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  "flowzap_mindmap_approve": {
+    "title": "Check Mind Map Readiness",
+    "description": "Returns a structured ERROR, WARNING and INFO verdict on whether valid code renders well as a mind map: diamonds and taskboxes are blocking errors, multiple circles and depth beyond five levels are warnings, edge directions are informational. Use it after flowzap_mindmap_validate when you want to know whether the result is worth presenting, not merely whether it compiles. It parses locally and creates nothing.",
+    "annotations": {
+      "title": "Check Mind Map Readiness",
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  "flowzap_mindmap_template": {
+    "title": "Generate Mind Map Skeleton",
+    "description": "Generates ready-to-extend FlowZap Code for a mind map from a topic, a branch count and a depth: a central circle root, rectangle branches and sub-branches, and cross-links between branches where they fit the tree. Use it to bootstrap a new mind map instead of writing the skeleton by hand. It returns code only and does not validate it or create a page; validate the edited result with flowzap_mindmap_validate.",
+    "annotations": {
+      "title": "Generate Mind Map Skeleton",
+      "readOnlyHint": true,
+      "destructiveHint": false,
+      "idempotentHint": true,
+      "openWorldHint": false
+    }
+  },
+  "flowzap_mindmap_create_playground": {
+    "title": "Create Shareable Mind Map",
+    "description": "Validates the code and creates a shareable URL that opens directly in mind map view. Use it once flowzap_mindmap_validate and flowzap_mindmap_approve have passed and the user wants to see or share the mind map. Side effects: it publishes a public page and returns its URL; the session expires 60 minutes after creation, so the URL is not durable.",
+    "annotations": {
+      "title": "Create Shareable Mind Map",
+      "readOnlyHint": false,
+      "destructiveHint": false,
+      "idempotentHint": false,
+      "openWorldHint": false
+    }
+  }
+};
+
+function withMeta(tool: Tool): Tool {
+  const meta = TOOL_META[tool.name];
+  if (!meta) return tool;
+  return {
+    ...tool,
+    title: meta.title,
+    description: meta.description,
+    annotations: meta.annotations,
+  } as Tool;
+}
+
 // Tool definitions
-const tools: Tool[] = [
+const toolsRaw: Tool[] = [
   {
     name: "flowzap_validate",
     description:
@@ -220,6 +382,8 @@ const tools: Tool[] = [
   mindmapTemplateTool,
   mindmapCreatePlaygroundTool,
 ];
+
+const tools: Tool[] = toolsRaw.map(withMeta);
 
 // FlowZap Code syntax documentation
 const FLOWZAP_SYNTAX = `
@@ -366,6 +530,7 @@ async function validateCode(rawCode: unknown): Promise<any> {
       lanes: Number(result.stats.lanes) || 0,
       nodes: Number(result.stats.nodes) || 0,
       edges: Number(result.stats.edges) || 0,
+      loops: Number(result.stats.loops) || 0,
     } : undefined,
   };
 }
@@ -417,45 +582,101 @@ async function createPlayground(rawCode: unknown, view?: string): Promise<any> {
 // TOOL HANDLERS (with error handling)
 // =============================================================================
 
-async function handleValidate(code: unknown): Promise<string> {
+type Issue = { line?: number; code?: string; message?: string; severity?: string };
+type ValidationPayload = {
+  valid: boolean;
+  errors: Issue[];
+  warnings: Issue[];
+  stats?: { lanes: number; nodes: number; edges: number; loops: number };
+};
+
+/**
+ * A line number of 0 is the parser's "not attributable" sentinel, not a fact.
+ * Rendering it as a line number fabricates precision the agent cannot act on.
+ */
+function formatIssue(issue: Issue): string {
+  const code = issue.code ? `[${issue.code}] ` : "";
+  const line = typeof issue.line === "number" && issue.line > 0 ? `Line ${issue.line}: ` : "";
+  return `- ${line}${code}${issue.message ?? ""}`;
+}
+
+async function handleValidate(
+  code: unknown,
+): Promise<{ text: string; structured: ValidationPayload }> {
   try {
-    const result = await validateCode(code);
+    const result = (await validateCode(code)) as ValidationPayload;
+    const stats = result.stats
+      ? `- Lanes: ${result.stats.lanes}\n- Nodes: ${result.stats.nodes}\n- Edges: ${result.stats.edges}\n- Loops: ${result.stats.loops}`
+      : "";
+    let text: string;
     if (result.valid) {
-      return `✅ FlowZap Code is valid!\n\nStats:\n- Lanes: ${result.stats?.lanes || 0}\n- Nodes: ${result.stats?.nodes || 0}\n- Edges: ${result.stats?.edges || 0}`;
+      text = `FlowZap Code is valid.\n\nStats:\n${stats}`;
     } else {
-      const errors = result.errors?.map((e: any) => `- Line ${e.line}: ${e.message}`).join("\n") || "Unknown error";
-      return `❌ Validation failed:\n${errors}`;
+      const errors = result.errors.map(formatIssue).join("\n");
+      text = `Validation failed.\n\n${errors}`;
+      if (result.warnings.length > 0) {
+        text += `\n\nWarnings:\n${result.warnings.map(formatIssue).join("\n")}`;
+      }
     }
+    return { text, structured: result };
   } catch (error) {
     securityLog("HANDLER_ERROR", { handler: "validate", error: String(error) });
-    // Don't expose internal error details to client
-    return `❌ Error validating code. Please try again.`;
+    return {
+      text: "Error validating code. Please try again.",
+      structured: {
+        valid: false,
+        errors: [{ code: "UPSTREAM_ERROR", message: "Validator unavailable." }],
+        warnings: [],
+      },
+    };
   }
 }
 
-async function handleCreatePlayground(code: unknown, view?: string): Promise<string> {
+async function handleCreatePlayground(
+  code: unknown,
+  view?: string,
+): Promise<{ text: string; structured: Record<string, unknown> }> {
   try {
-    // First validate
-    const validation = await validateCode(code);
+    // Validate first, but hand back the validator's codes so a single call can
+    // fail informatively instead of forcing a second round trip.
+    const validation = (await validateCode(code)) as ValidationPayload;
     if (!validation.valid) {
-      const errors = validation.errors?.map((e: any) => `- Line ${e.line}: ${e.message}`).join("\n") || "Unknown error";
-      return `❌ Cannot create playground - code has errors:\n${errors}`;
+      const errors = validation.errors.map(formatIssue).join("\n") || "Unknown error";
+      return {
+        text: `Cannot create playground - code has errors:\n${errors}`,
+        structured: {
+          valid: false,
+          url: null,
+          errors: validation.errors,
+          warnings: validation.warnings,
+          stats: validation.stats,
+        },
+      };
     }
 
-    // Create playground with optional view parameter
     const result = await createPlayground(code, view);
     if (result.url) {
       const viewLabel = view === "architecture" ? "Architecture Diagram" : view === "sequence" ? "Sequence Diagram" : view === "mindmap" ? "Mind Map" : "Diagram";
-      return `Your diagram was created successfully.\nView your ${viewLabel}: ${result.url}`;
-    } else if (result.error) {
-      return `❌ Failed to create playground: ${result.error}`;
-    } else {
-      return `❌ Unexpected response from FlowZap API`;
+      return {
+        text: `Your diagram was created successfully.\nView your ${viewLabel}: ${result.url}`,
+        structured: {
+          valid: true,
+          url: result.url,
+          view: view ?? "workflow",
+          expiresAt: result.tokenExpiresAt ?? result.expiresAt ?? null,
+        },
+      };
     }
+    return {
+      text: result.error ? `Failed to create playground: ${result.error}` : "Unexpected response from FlowZap API",
+      structured: { valid: true, url: null, error: result.error ?? "unexpected_response" },
+    };
   } catch (error) {
     securityLog("HANDLER_ERROR", { handler: "createPlayground", error: String(error) });
-    // Don't expose internal error details to client
-    return `❌ Error creating playground. Please try again.`;
+    return {
+      text: "Error creating playground. Please try again.",
+      structured: { valid: false, url: null, error: "upstream_error" },
+    };
   }
 }
 
@@ -463,7 +684,7 @@ async function handleCreatePlayground(code: unknown, view?: string): Promise<str
 const server = new Server(
   {
     name: "flowzap-mcp",
-      version: "2.1.0",
+    version: CLIENT_VERSION,
   },
   {
     capabilities: {
@@ -494,7 +715,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request: any) => {
     case "flowzap_validate": {
       const code = (args as { code?: unknown })?.code;
       const result = await handleValidate(code);
-      return { content: [{ type: "text", text: result }] };
+      return {
+        content: [{ type: "text", text: result.text }],
+        structuredContent: result.structured,
+      };
     }
 
     case "flowzap_fix": {
@@ -506,7 +730,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request: any) => {
     case "flowzap_create_playground": {
       const { code, view } = args as { code?: unknown; view?: string };
       const result = await handleCreatePlayground(code, view);
-      return { content: [{ type: "text", text: result }] };
+      const sc = result.structured as { url?: string | null };
+      // isError marks "the tool did not produce its primary output (a URL)".
+      // A validation verdict from flowzap_validate is NOT an error: it did its job.
+      return {
+        content: [{ type: "text", text: result.text }],
+        structuredContent: result.structured,
+        isError: sc.url == null,
+      };
     }
 
     case "flowzap_get_syntax": {
@@ -540,7 +771,11 @@ server.setRequestHandler(CallToolRequestSchema, async (request: any) => {
     case "flowzap_compliance_check": {
       const { code, lng } = args as { code?: unknown; lng?: unknown };
       const result = await handleComplianceCheck(code, lng);
-      return { content: [{ type: "text", text: result }] };
+      return {
+        content: [{ type: "text", text: result.text }],
+        structuredContent: result.structured,
+        isError: result.structured.ok === false,
+      };
     }
 
     case "flowzap_mindmap_validate": {

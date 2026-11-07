@@ -10,6 +10,7 @@
  */
 
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
+import { CLIENT_HEADERS } from "../clientMeta.js";
 
 const FLOWZAP_API_BASE = "https://flowzap.xyz";
 const REQUEST_TIMEOUT_MS = 30_000;
@@ -102,15 +103,6 @@ function renderMarkdown(payload: ComplianceResponse): string {
   const fw = payload.frameworks || {};
   const sections: string[] = [];
 
-  // Lead with the shareable rendered-result URL when available so agents (and end users)
-  // can deep-link directly to a styled audit page instead of relying on inline markdown.
-  if (isSafeResultUrl(payload.resultUrl)) {
-    sections.push(
-      `A compliance check to SOC2, PIPL and GDPR is ready and is available here: ${payload.resultUrl}`,
-    );
-    sections.push("");
-  }
-
   sections.push("# Compliance Check Results (SOC2 · GDPR · PIPL)\n");
   for (const key of ["gdpr", "soc2", "pipl"] as const) {
     const findings = fw[key]?.findings || [];
@@ -121,24 +113,38 @@ function renderMarkdown(payload: ComplianceResponse): string {
   if (payload.disclaimer) {
     sections.push(`---\n${payload.disclaimer}`);
   }
-  sections.push(
-    "\nFor a full interactive audit, visit https://flowzap.xyz/soc2-gdpr-pipl-compliance-checker",
-  );
   return sections.join("\n");
 }
+
+export type ComplianceResult = {
+  ok: boolean;
+  code?: string;
+  retryAfterSeconds?: number;
+  resultUrl?: string;
+  report?: string;
+};
 
 export async function handleComplianceCheck(
   rawCode: unknown,
   rawLng: unknown,
-): Promise<string> {
+): Promise<{ text: string; structured: ComplianceResult }> {
   if (typeof rawCode !== "string") {
-    return "❌ Compliance check failed: `code` must be a string.";
+    return {
+      text: "Compliance check failed: `code` must be a string.",
+      structured: { ok: false, code: "INVALID_INPUT" },
+    };
   }
   if (rawCode.trim().length === 0) {
-    return "❌ Compliance check failed: `code` cannot be empty.";
+    return {
+      text: "Compliance check failed: `code` cannot be empty.",
+      structured: { ok: false, code: "INVALID_INPUT" },
+    };
   }
   if (rawCode.length > 50_000) {
-    return "❌ Compliance check failed: `code` exceeds 50,000 characters.";
+    return {
+      text: "Compliance check failed: `code` exceeds 50,000 characters.",
+      structured: { ok: false, code: "INVALID_INPUT" },
+    };
   }
 
   const lng: ComplianceLng =
@@ -158,8 +164,7 @@ export async function handleComplianceCheck(
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "User-Agent": "flowzap-mcp/1.4.3",
-        "X-MCP-Client": "flowzap-mcp",
+        ...CLIENT_HEADERS,
       },
       body: JSON.stringify({ code: sanitizedCode, lng }),
       signal: controller.signal,
@@ -173,21 +178,45 @@ export async function handleComplianceCheck(
     }
 
     if (response.status === 429) {
-      const retryAfter = payload?.retryAfter ? ` Retry in ~${payload.retryAfter}s.` : "";
-      return `❌ Compliance check rate limit exceeded.${retryAfter} Limits: 3 successful checks/day per IP, 1/hour burst, global 5-min circuit breaker. Try the manual checker at https://flowzap.xyz/soc2-gdpr-pipl-compliance-checker.`;
+      const retryAfterSeconds =
+        typeof payload?.retryAfter === "number" ? payload.retryAfter : undefined;
+      return {
+        text:
+          retryAfterSeconds !== undefined
+            ? `Compliance check rate limited. Retry in about ${retryAfterSeconds}s.`
+            : "Compliance check rate limited.",
+        structured: { ok: false, code: "RATE_LIMITED", retryAfterSeconds },
+      };
     }
 
     if (!response.ok || !payload || payload.error) {
       const message = payload?.error || `API error: ${response.status}`;
-      return `❌ Compliance check failed: ${message}`;
+      return {
+        text: `Compliance check failed: ${message}`,
+        structured: { ok: false, code: "UPSTREAM_ERROR", report: message },
+      };
     }
 
-    return renderMarkdown(payload);
+    const report = renderMarkdown(payload);
+    return {
+      text: report,
+      structured: {
+        ok: true,
+        report,
+        resultUrl: isSafeResultUrl(payload.resultUrl) ? payload.resultUrl : undefined,
+      },
+    };
   } catch (error) {
     if (error instanceof Error && error.name === "AbortError") {
-      return "❌ Compliance check timed out after 30 seconds. Please try again.";
+      return {
+        text: "Compliance check timed out after 30 seconds. Please try again.",
+        structured: { ok: false, code: "TIMEOUT" },
+      };
     }
-    return "❌ Compliance check failed. Please try again.";
+    return {
+      text: "Compliance check failed. Please try again.",
+      structured: { ok: false, code: "UPSTREAM_ERROR" },
+    };
   } finally {
     clearTimeout(timeoutId);
   }

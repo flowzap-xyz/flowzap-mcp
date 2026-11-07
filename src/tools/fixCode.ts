@@ -15,6 +15,7 @@
  */
 
 import type { Tool } from "@modelcontextprotocol/sdk/types.js";
+import { CLIENT_HEADERS } from "../clientMeta.js";
 
 const FLOWZAP_API_BASE = "https://flowzap.xyz";
 const REQUEST_TIMEOUT_MS = 30_000;
@@ -131,8 +132,7 @@ export async function handleFixCode(rawCode: unknown, _rawLng?: unknown): Promis
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "User-Agent": "flowzap-mcp/2.1.0",
-        "X-MCP-Client": "flowzap-mcp",
+        ...CLIENT_HEADERS,
       },
       body: JSON.stringify({ code }),
       signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),

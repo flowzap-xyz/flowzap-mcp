@@ -4,6 +4,8 @@
  * Shared functions for creating playground URLs from FlowZap Code.
  */
 
+import { CLIENT_HEADERS } from "../clientMeta.js";
+
 const FLOWZAP_API_BASE = "https://flowzap.xyz";
 const REQUEST_TIMEOUT_MS = 30_000;
 
@@ -19,8 +21,7 @@ export async function createPlaygroundUrl(code: string): Promise<{ url?: string;
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "User-Agent": "flowzap-mcp/1.4.3",
-        "X-MCP-Client": "flowzap-mcp",
+        ...CLIENT_HEADERS,
       },
       body: JSON.stringify({ code, source: 'mcp' }),
       signal: controller.signal,
