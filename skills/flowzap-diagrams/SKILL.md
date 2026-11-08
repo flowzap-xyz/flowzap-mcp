@@ -84,14 +84,14 @@ If the FlowZap MCP server is not already configured, install it:
 
 ```bash
 # Claude Code
-claude mcp add --transport stdio flowzap -- npx -y flowzap-mcp@2.0.0
+claude mcp add --transport stdio flowzap -- npx -y flowzap-mcp@2.2.1
 
 # Or add to .mcp.json / claude_desktop_config.json / cursor / windsurf config:
 {
   "mcpServers": {
     "flowzap": {
       "command": "npx",
-      "args": ["-y", "flowzap-mcp@2.0.0"]
+      "args": ["-y", "flowzap-mcp@2.2.1"]
     }
   }
 }
@@ -99,19 +99,19 @@ claude mcp add --transport stdio flowzap -- npx -y flowzap-mcp@2.0.0
 
 ### Package verification
 
-The pinned version `2.0.0` can be verified against the npm registry:
+The pinned version `2.2.1` can be verified against the npm registry:
 
 | Field | Value |
 |-------|-------|
-| **npm** | [flowzap-mcp@2.0.0](https://www.npmjs.com/package/flowzap-mcp/v/2.0.0) |
-| **Integrity (SHA-512)** | `sha512-uk1aqnrGKxJ3qUqyd54VJYKDkeziTql+wlcNwlcibRyh4h8yPzHr7wqBPe6vQi2EQpx7errc5kRG4oLssMyOCg==` |
-| **Shasum** | `492022ab18242831527df162d232fbb627fcd459` |
+| **npm** | [flowzap-mcp@2.2.1](https://www.npmjs.com/package/flowzap-mcp/v/2.2.1) |
+| **Integrity (SHA-512)** | `sha512-fGxH5hY4dKMgP484etT38DL8/M+8luxkQuU4GeTsnEd6I0XZuOvhV+K2HpuT1oli3AFEbkrsuF4+v4yxDfJJPA==` |
+| **Shasum** | `9840c995d6cd578fb1b21f51d24d6918d7968c1a` |
 | **Source** | [github.com/flowzap-xyz/flowzap-mcp](https://github.com/flowzap-xyz/flowzap-mcp) |
 | **License** | MIT |
 
 To verify locally before use:
 ```bash
-npm view flowzap-mcp@2.0.0 dist.integrity dist.shasum
+npm view flowzap-mcp@2.2.1 dist.integrity dist.shasum
 ```
 
 Compatible tools: Claude Desktop, Claude Code, Cursor, Windsurf, OpenAI Codex,
@@ -395,5 +395,5 @@ The playground session is stored server-side with a cryptographic token (UUID v4
 - [JSON syntax schema](https://flowzap.xyz/api/flowzap-code-schema.json)
 - [200+ workflow templates](https://flowzap.xyz/templates)
 - [MCP server docs](https://flowzap.xyz/docs/mcp)
-- [npm package — flowzap-mcp v2.0.0](https://www.npmjs.com/package/flowzap-mcp)
+- [npm package — flowzap-mcp v2.2.1](https://www.npmjs.com/package/flowzap-mcp)
 - [GitHub](https://github.com/flowzap-xyz/flowzap-mcp)
