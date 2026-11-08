@@ -177,3 +177,4 @@ n13.handle(top) -> Application.n6.handle(bottom) [label="Error 401"]
 - **Error paths**: Invalid format loops back to User, invalid credentials return 401
 - **Loop**: Retry cycle on `n2 n3 n7 n8` until format is valid
 - **Sequential IDs**: `n1` through `n14`, no gaps, globally unique
+- **Advisory warnings**: the two branch arms are flattened into a single edge list, so the validator raises `CHRONOLOGICAL_ORDER_WARNING` on the return paths. It is a warning, not an error — the code is valid and the diagram renders. Keep the warning in mind only when the sequence view has to be read as a strict timeline: merge the arms in-lane first, then cross once.

@@ -145,8 +145,10 @@ have to parse prose:
 | Tool | `structuredContent` |
 |------|---------------------|
 | `flowzap_validate` | `{ valid, errors: [{ line, message, code, severity }], warnings, stats: { lanes, nodes, edges, loops } }` |
-| `flowzap_create_playground` | `{ valid, url, view }`, or `{ valid, url: null, errors }` when nothing was created |
-| `flowzap_compliance_check` | `{ ok, frameworks, disclaimer, provenance }`, or `{ ok: false, code: 'RATE_LIMITED', retryAfterSeconds }` |
+| `flowzap_create_playground` | success: `{ valid: true, url, view, expiresAt }` · invalid code: `{ valid: false, url: null, errors, warnings, stats }` · API refused: `{ valid: true, url: null, error }` |
+| `flowzap_compliance_check` | `{ ok: true, report, resultUrl? }`, or `{ ok: false, code: 'RATE_LIMITED' \| 'INVALID_INPUT' \| 'TIMEOUT' \| 'UPSTREAM_ERROR', retryAfterSeconds? }` |
+
+The remaining tools return text only. `flowzap_apply_change` replies with a JSON string — `{ success, code, url, applied, summary }` — as its text payload, not as a `structuredContent` block.
 
 Read `isError` as a transport signal, not a verdict: it is present only when the tool produced no primary
 output (empty input, creation failed, quota reached). A rejected diagram is a normal answer: `valid: false`
@@ -239,7 +241,7 @@ FlowZap Code is **not** Mermaid, **not** PlantUML. It is a unique DSL offering a
 
 ### Multi-lane sequence design
 
-- **Ping-pong rule**: For multi-participant processes, every cross-lane interaction must alternate back-and-forth between lanes. A request from Lane A → Lane B must be followed by a response from Lane B → Lane A before any new major cross-lane request begins. This is now a strict validation requirement, not just a readability suggestion.
+- **Ping-pong rule**: For multi-participant processes, every cross-lane interaction should alternate back-and-forth between lanes: a request from Lane A → Lane B, then a response from Lane B → Lane A before that same lane sends again. It is not a rejection rule — the validator emits `CHRONOLOGICAL_ORDER_WARNING` and the diagram is still created. A branch flattened for the sequence view raises it legitimately; a genuinely out-of-order handoff does not.
 - **Chronological order**: The sequence view follows cross-lane edge definition order. Define request, response, then next request in the exact order they happen.
 
 ### Gotchas — never do these
@@ -311,20 +313,24 @@ n2.handle(right) -> n4.handle(left) [label="Yes"]
 5. If valid, call `flowzap_create_playground` to get a shareable URL.
 6. Return the FlowZap Code **and** the playground URL to the user.
 7. Always output **only** raw FlowZap Code when showing the diagram — no Markdown fences wrapping .fz content, no extra commentary mixed in.
-8. Read the advisory **process quality** block returned by `flowzap_create_playground` (and `flowzap_apply_change`), and fix the shape before handing the diagram over.
+8. Read the advisory **process quality** report and fix the shape before handing the diagram over. The REST endpoint returns it; the MCP tools do not (see below).
 
 ### Process quality (advisory, since 2.2.0)
 
-A diagram can be syntactically valid and still not be a process: a floating box, two beginnings, a dead end. The validator stays silent; `flowzap_create_playground` and `flowzap_apply_change` return a `quality` block next to the URL, plus a rendered warning line.
+A diagram can be syntactically valid and still not be a process: a floating box, two beginnings, a dead end. The validator stays silent. The audit lives in `POST https://flowzap.xyz/api/playground/create`, which returns `quality: { defects, warning }` next to the URL. **`flowzap-mcp@2.2.1` drops that block**: `flowzap_create_playground` hands back the URL only, and `flowzap_apply_change` returns `{ success, code, url, applied, summary }`. To gate on quality, call the REST endpoint with `{'Content-Type': 'application/json'}` and a `{ "code": "..." }` body.
 
 | Defect code | Meaning | Fix |
 |---|---|---|
 | `multiple-start-nodes` | more than one circle has no incoming edge | keep one start, feed the others |
+| `no-start-node` | no circle opens the flow | add a `circle` start |
 | `orphan-node` | a rectangle or diamond nobody hands work to | connect it from the step before, or from the lane that requested the work |
 | `dead-end-node` | a rectangle or diamond with no outgoing edge | route it to the next step or to a closing circle |
 | `no-terminal-circle` | the flow never reaches a closing circle | add one circle per outcome |
+| `lane-isolated` | a lane with no cross-lane edge at all | hand work in and out, or drop the lane |
+| `unanswered-handoff` | work enters a lane and never leaves it | send the response back to the lane that asked |
+| `unreachable-node` | a node no path reaches from the start | rewire it into the flow |
 
-The audit is advisory: the diagram **is** created and the URL returned. Correct the code and call the tool again; the block disappears when the shape is clean. Several endings are allowed, one per outcome (granted, rejected, expired); only the beginning is unique. Mind map views are exempt, a mind map has no start or end circle.
+The audit is advisory: the diagram **is** created and the URL returned. Correct the code and call the REST endpoint again; the block disappears when the shape is clean. Several endings are allowed, one per outcome (granted, rejected, expired); only the beginning is unique. Mind map views are exempt, a mind map has no start or end circle.
 
 ### Required response format (diagram request)
 
@@ -356,7 +362,7 @@ The `<resultUrl>` is a rendered, shareable, ephemeral audit page on flowzap.xyz 
 When `flowzap_compliance_check` returns a rate-limit error (no `resultUrl`, message contains `rate limit`), replace the second line with:
 
 ```
-Automated compliance check skipped — rate limit reached (3/day per IP). Run an unlimited manual check at https://flowzap.xyz/soc2-gdpr-pipl-compliance-checker
+Automated compliance check skipped — rate limit reached (10 per rolling 30 days, 3 per hour). Run an unlimited manual check at https://flowzap.xyz/soc2-gdpr-pipl-compliance-checker
 ```
 
 In that case, the first line (the playground URL) MUST still be returned so the user always gets a viewable diagram.
@@ -391,7 +397,7 @@ The MCP server processes raw inputs locally and sends only generated or agent-pr
 
 1. `POST https://flowzap.xyz/api/validate` — returns syntax validation result
 2. `POST https://flowzap.xyz/api/playground/create` — returns an ephemeral playground URL (60-minute TTL, non-guessable token)
-3. `POST https://flowzap.xyz/api/compliance-check` — returns SOC2/GDPR/PIPL compliance audit with shareable result URL (60-minute TTL). Backed by Deepseek LLM.
+3. `POST https://flowzap.xyz/api/compliance-check` — returns SOC2/GDPR/PIPL/EU AI Act compliance audit with a shareable result URL (report kept 90 days; the submitted FlowZap Code is purged after 24 hours). Backed by Deepseek LLM.
 
 If the agent uses `flowzap_artifact_to_diagram`, the raw HTTP logs, OpenAPI spec,
 or code snippet are parsed locally inside the MCP package first. Only the
@@ -410,6 +416,7 @@ Playground URLs are ephemeral, time-limited (60-minute TTL), and use non-guessab
 |----------|-------------|-----------|
 | `POST /api/validate` | **None** — stateless; code is parsed in memory and discarded after the response | 0 (not persisted) |
 | `POST /api/playground/create` | FlowZap Code only (in PostgreSQL) | 60 minutes (database row + playground URL both expire) |
+| `POST /api/compliance-check` | The rendered report (findings + provenance), plus the submitted FlowZap Code for the first 24 hours | Report 90 days; source code purged after 24 hours |
 
 The playground session is stored server-side with a cryptographic token (UUID v4). After the 60-minute TTL, the session is deleted — either on the next access attempt or during a periodic sweep. No user identity, file paths, environment variables, or host metadata are attached to the session.
 
