@@ -1,6 +1,6 @@
 # FlowZap MCP Server
 
-[![npm version](https://img.shields.io/npm/v/flowzap-mcp)](https://www.npmjs.com/package/flowzap-mcp) [![MCP](https://img.shields.io/badge/MCP-2025--06--18-purple)](https://flowzap.xyz/docs/mcp)
+[![npm version](https://img.shields.io/npm/v/flowzap-mcp)](https://www.npmjs.com/package/flowzap-mcp) [![MCP](https://img.shields.io/badge/MCP-2025--06--18-purple)](https://flowzap.xyz/docs/mcp) [![mcptry: working, score 91/100](https://mcptry.com/badge/io.github.flowzap-xyz/flowzap.svg)](https://mcptry.com/servers/io.github.flowzap-xyz/flowzap)
 
 Create workflow, sequence, architecture, and mind map diagrams using AI assistants like Claude, Cursor, Windsurf, and 8 other MCP-compatible tools.
 

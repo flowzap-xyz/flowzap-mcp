@@ -1,7 +1,16 @@
 {
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "io.github.flowzap-xyz/flowzap",
+  "title": "FlowZap",
   "description": "Create workflow, sequence, architecture, and mind map diagrams via AI assistants.",
+  "websiteUrl": "https://flowzap.xyz",
+  "icons": [
+    {
+      "src": "https://flowzap.xyz/icon-512.png",
+      "mimeType": "image/png",
+      "sizes": ["512x512"]
+    }
+  ],
   "repository": {
     "url": "https://github.com/flowzap-xyz/flowzap-mcp",
     "source": "github"
