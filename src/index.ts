@@ -501,7 +501,11 @@ async function validateCode(rawCode: unknown): Promise<any> {
   const sanitized = sanitizeCode(rawCode);
   if (!sanitized.valid) {
     securityLog("INPUT_VALIDATION_FAILED", { error: sanitized.error });
-    return { valid: false, errors: [{ line: 0, message: sanitized.error }] };
+    // `warnings` must be present: the caller reads `result.warnings.length` before
+    // formatting the verdict. Leaving it out made every rejected input (empty string,
+    // over-long code) throw a TypeError, which the handler reported as
+    // "Validator unavailable" with an UPSTREAM_ERROR code instead of the real reason.
+    return { valid: false, errors: [{ line: 0, message: sanitized.error, code: "INVALID_PAYLOAD" }], warnings: [] };
   }
   
   const code = sanitized.code!;
@@ -715,9 +719,13 @@ server.setRequestHandler(CallToolRequestSchema, async (request: any) => {
     case "flowzap_validate": {
       const code = (args as { code?: unknown })?.code;
       const result = await handleValidate(code);
+      const sc = result.structured as { errors?: Array<{ code?: string }> };
+      // Same rule as the hosted transport: a rejected diagram is a normal answer, but
+      // an input that could not be evaluated at all means the tool produced no verdict.
       return {
         content: [{ type: "text", text: result.text }],
         structuredContent: result.structured,
+        ...(sc.errors?.[0]?.code === "INVALID_PAYLOAD" ? { isError: true } : {}),
       };
     }
 
