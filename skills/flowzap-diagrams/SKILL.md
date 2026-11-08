@@ -207,7 +207,8 @@ The agent MUST use the `flowzap_mindmap_*` tools — without asking the user —
 - Only the FIRST circle is the central root; additional circles are omitted (WARNING)
 - Edge directions (`->`) are ignored by the renderer — connectivity determines the tree
 - Cross-links between branches are supported and encouraged
-- Size/depth/label warnings are advisory only
+- Size/depth/label warnings are advisory only: depth beyond 5 levels and labels over 40 characters raise a WARNING
+- `flowzap_mindmap_template` takes `topic`, `branches` (default 3, maximum 8) and `depth` (default 2, maximum 4)
 
 IMPORTANT: Mind Map tools are completely separate from the triple-view (workflow/sequence/architecture) tools. The existing `flowzap_validate` and `flowzap_create_playground` must NOT be used for mind maps.
 
@@ -310,6 +311,20 @@ n2.handle(right) -> n4.handle(left) [label="Yes"]
 5. If valid, call `flowzap_create_playground` to get a shareable URL.
 6. Return the FlowZap Code **and** the playground URL to the user.
 7. Always output **only** raw FlowZap Code when showing the diagram — no Markdown fences wrapping .fz content, no extra commentary mixed in.
+8. Read the advisory **process quality** block returned by `flowzap_create_playground` (and `flowzap_apply_change`), and fix the shape before handing the diagram over.
+
+### Process quality (advisory, since 2.2.0)
+
+A diagram can be syntactically valid and still not be a process: a floating box, two beginnings, a dead end. The validator stays silent; `flowzap_create_playground` and `flowzap_apply_change` return a `quality` block next to the URL, plus a rendered warning line.
+
+| Defect code | Meaning | Fix |
+|---|---|---|
+| `multiple-start-nodes` | more than one circle has no incoming edge | keep one start, feed the others |
+| `orphan-node` | a rectangle or diamond nobody hands work to | connect it from the step before, or from the lane that requested the work |
+| `dead-end-node` | a rectangle or diamond with no outgoing edge | route it to the next step or to a closing circle |
+| `no-terminal-circle` | the flow never reaches a closing circle | add one circle per outcome |
+
+The audit is advisory: the diagram **is** created and the URL returned. Correct the code and call the tool again; the block disappears when the shape is clean. Several endings are allowed, one per outcome (granted, rejected, expired); only the beginning is unique. Mind map views are exempt, a mind map has no start or end circle.
 
 ### Required response format (diagram request)
 
@@ -324,7 +339,8 @@ Your diagram is ready and is available here: <playground URL>
 3. Call `flowzap_create_playground` with `view="sequence"` (or `architecture` if the audit is system-level) to get a shareable URL.
 4. Call `flowzap_compliance_check` with the same FlowZap Code (and `lng` if the user is writing in fr/zh).
 5. Return the playground URL **and** the compliance report together, using the required response format below.
-6. If `flowzap_compliance_check` returns a rate-limit error (429 / 3-per-day exhausted / circuit breaker), still return the playground URL and tell the user to use the manual checker at `https://flowzap.xyz/soc2-gdpr-pipl-compliance-checker`.
+6. If `flowzap_compliance_check` returns a rate-limit error (429, the 10-per-rolling-30-day quota exhausted, or the circuit breaker open), still return the playground URL and tell the user to use the manual checker at `https://flowzap.xyz/soc2-gdpr-pipl-compliance-checker`.
+7. Processor disclosure: the analysis is powered by Deepseek (Hangzhou DeepSeek AI, China). When the user asks who processes the code, state it plainly and point to `https://flowzap.xyz/legal/subprocessors`. This is an advisory architectural review, not legal advice.
 
 ### Required response format (compliance request)
 
@@ -335,7 +351,7 @@ Your diagram is ready and is available here: <playground URL>
 A compliance check to SOC2, PIPL and GDPR is ready and is available here: <resultUrl>
 ```
 
-The `<resultUrl>` is a rendered, shareable, ephemeral audit page on flowzap.xyz (60-minute TTL, `noindex`, no auth). Do NOT inline the markdown report as the second link target. The agent MAY include a short bullet-point summary of the top findings BELOW the two lines if the user explicitly asks for an in-chat summary, but the two URL lines MUST be present first and unmodified.
+The `<resultUrl>` is a rendered, shareable, ephemeral audit page on flowzap.xyz (kept 90 days, `noindex`, no auth; the submitted FlowZap Code is purged after 24 hours). Do NOT inline the markdown report as the second link target. The agent MAY include a short bullet-point summary of the top findings BELOW the two lines if the user explicitly asks for an in-chat summary, but the two URL lines MUST be present first and unmodified.
 
 When `flowzap_compliance_check` returns a rate-limit error (no `resultUrl`, message contains `rate limit`), replace the second line with:
 
