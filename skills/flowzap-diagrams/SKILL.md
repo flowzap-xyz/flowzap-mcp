@@ -135,7 +135,25 @@ tooling workflow described below.
 | `flowzap_artifact_to_diagram` | Parse HTTP logs / OpenAPI / code → diagram + playground URL |
 | `flowzap_diff` | Structured diff between two .fz versions |
 | `flowzap_apply_change` | Patch a diagram (insert/remove/update nodes/edges) |
-| `flowzap_compliance_check` | Automated SOC2/GDPR/PIPL compliance analysis on data-flow diagrams (Deepseek LLM; 3/day per IP, 1/hour burst, global circuit breaker) |
+| `flowzap_compliance_check` | Automated SOC2/GDPR/PIPL/EU AI Act compliance analysis on data-flow diagrams (Deepseek LLM; 10 reviews per rolling 30-day period, 3/hour burst, global circuit breaker) |
+
+### Machine-readable replies (since 2.2.1)
+
+The three tools an agent reasons about return a `structuredContent` block next to the text, so you never
+have to parse prose:
+
+| Tool | `structuredContent` |
+|------|---------------------|
+| `flowzap_validate` | `{ valid, errors: [{ line, message, code, severity }], warnings, stats: { lanes, nodes, edges, loops } }` |
+| `flowzap_create_playground` | `{ valid, url, view }`, or `{ valid, url: null, errors }` when nothing was created |
+| `flowzap_compliance_check` | `{ ok, frameworks, disclaimer, provenance }`, or `{ ok: false, code: 'RATE_LIMITED', retryAfterSeconds }` |
+
+Read `isError` as a transport signal, not a verdict: it is present only when the tool produced no primary
+output (empty input, creation failed, quota reached). A rejected diagram is a normal answer: `valid: false`
+with `isError` absent. Empty or unusable input comes back as `INVALID_PAYLOAD`, never as an upstream failure.
+
+Each tool also declares a `title` and MCP `annotations` (read-only, destructive, idempotent, open-world), so
+a client can decide what to auto-approve without asking the user.
 
 ### Repair tool (`flowzap_fix`)
 
