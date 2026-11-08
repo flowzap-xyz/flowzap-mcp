@@ -28,7 +28,7 @@ server provides the actual tools.
 
 - This skill bundle is documentation only: `SKILL.md` plus reference files. It
   does not execute code by itself.
-- The `flowzap-mcp` server runs locally on the user's machine over stdio.
+- The MCP server is either the hosted endpoint at `https://flowzap.xyz/mcp` (streamable HTTP) or the `flowzap-mcp` package running locally over stdio; both expose the same 13 tools.
 - Outbound requests are restricted to `https://flowzap.xyz`.
 - Raw HTTP logs, OpenAPI specs, and code snippets are parsed locally inside the
   MCP package. Only generated FlowZap Code is sent to FlowZap public endpoints
@@ -80,13 +80,35 @@ Manual locations:
 
 ### Install the MCP server (required for tools)
 
-If the FlowZap MCP server is not already configured, install it:
+Two routes, same 13 tools. Prefer the hosted endpoint: nothing is downloaded or
+executed on the user's machine.
+
+**Hosted (recommended)** — streamable HTTP, served by FlowZap:
+
+```bash
+# Claude Code
+claude mcp add --transport http flowzap https://flowzap.xyz/mcp
+```
+
+```json
+{
+  "mcpServers": {
+    "flowzap": {
+      "url": "https://flowzap.xyz/mcp"
+    }
+  }
+}
+```
+
+**Local package** — pin the version, so the only artifact fetched is that exact
+tarball:
 
 ```bash
 # Claude Code
 claude mcp add --transport stdio flowzap -- npx -y flowzap-mcp@2.2.1
+```
 
-# Or add to .mcp.json / claude_desktop_config.json / cursor / windsurf config:
+```json
 {
   "mcpServers": {
     "flowzap": {
@@ -99,7 +121,9 @@ claude mcp add --transport stdio flowzap -- npx -y flowzap-mcp@2.2.1
 
 ### Package verification
 
-The pinned version `2.2.1` can be verified against the npm registry:
+The hosted endpoint reports its version on `initialize` (currently `2.2.1`). If
+you run the local package instead, the pinned version `2.2.1` can be verified
+against the npm registry:
 
 | Field | Value |
 |-------|-------|
@@ -378,7 +402,7 @@ The trust boundary is intentionally narrow:
 - Outbound traffic is restricted to `https://flowzap.xyz`.
 - Validation is stateless; playground sessions are time-limited.
 
-The `flowzap-mcp` server runs locally on the user's machine (stdio transport) and enforces the following safeguards:
+The local `flowzap-mcp` package enforces the following safeguards. The hosted endpoint is the same server, served from `flowzap.xyz` behind the same controls:
 
 | Control | Detail |
 |---------|--------|
