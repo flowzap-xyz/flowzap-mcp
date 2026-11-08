@@ -2,7 +2,7 @@
 
 [![npm version](https://img.shields.io/npm/v/flowzap-mcp)](https://www.npmjs.com/package/flowzap-mcp) [![MCP](https://img.shields.io/badge/MCP-2025--06--18-purple)](https://flowzap.xyz/docs/mcp) [![mcptry: working, score 91/100](https://mcptry.com/badge/io.github.flowzap-xyz/flowzap.svg)](https://mcptry.com/servers/io.github.flowzap-xyz/flowzap)
 
-Create workflow, sequence, architecture, and mind map diagrams using AI assistants like Claude, Cursor, Windsurf, and 8 other MCP-compatible tools.
+Create workflow, sequence, architecture, and mind map diagrams using AI assistants like Claude, Cursor, Antigravity, and Devin Desktop, plus any other MCP-compatible tool.
 
 [FlowZap](https://flowzap.xyz) is a visual workflow diagramming tool with a text-based DSL called **FlowZap Code**. This MCP server lets AI assistants create diagrams for you.
 
@@ -28,17 +28,19 @@ The FlowZap MCP Server works with **any tool that supports the Model Context Pro
 |------|------------------|
 | **Claude Desktop** | Add to `claude_desktop_config.json`:<br>**macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`<br>**Windows:** `%APPDATA%\Claude\claude_desktop_config.json` |
 | **Claude Code** | Run: `claude mcp add --transport stdio flowzap -- npx -y flowzap-mcp`<br>Or add to `.mcp.json` in your project root. |
-| **Cursor** | Open Settings → Features → MCP Servers → Add Server. Use the same JSON config. |
-| **Windsurf IDE** | Add to `~/.codeium/windsurf/mcp_config.json` |
+| **Cursor** | Add to `~/.cursor/mcp.json` (all projects) or `.cursor/mcp.json` (one project). |
+| **Antigravity** (Google) | Add to `~/.gemini/config/mcp_config.json` (global) or `.agents/mcp_config.json` (workspace). Remote servers take `serverUrl`. |
+| **Devin Desktop** (formerly Windsurf) | Add to `~/.config/devin/mcp_config.json` (macOS/Linux) or `%APPDATA%\devin\mcp_config.json` (Windows). The legacy `~/.codeium/windsurf/mcp_config.json` is still read. |
+| **GitHub Copilot** (VS Code) | Run `MCP: Open User Configuration`, or add to `.vscode/mcp.json`. This client uses the `servers` key, not `mcpServers`. |
 | **OpenAI Codex** | Add to `~/.codex/config.toml`:<br>`[mcp_servers.flowzap]`<br>`command = "npx"`<br>`args = ["-y", "flowzap-mcp"]`<br>Or run: `codex mcp add flowzap -- npx -y flowzap-mcp` |
+| **Gemini CLI** | Add to `~/.gemini/settings.json` under `mcpServers`. |
 | **Warp Terminal** | Settings → MCP Servers → Click "+ Add" → Paste the JSON config. |
 | **Zed Editor** | Add to `settings.json`:<br>`{"context_servers": {"flowzap": {"command": "npx", "args": ["-y", "flowzap-mcp"]}}}` |
 | **Cline** (VS Code) | Open Cline sidebar → MCP Servers icon → Edit `cline_mcp_settings.json` |
 | **Roo Code** (VS Code) | Add to `.roo/mcp.json` in project or global settings. |
 | **Continue.dev** | Create `.continue/mcpServers/flowzap.yaml` with:<br>`name: FlowZap`<br>`mcpServers:`<br>`  - name: flowzap`<br>`    command: npx`<br>`    args: ["-y", "flowzap-mcp"]` |
-| **Sourcegraph Cody** | Add to VS Code `settings.json` via `openctx.providers` configuration. |
 
-> **Not Compatible:** Replit and Lovable.dev only support remote MCP servers via URL. Use the [Public API](https://flowzap.xyz/api/playground/create) instead.
+> **Hosted agents:** Replit, Lovable.dev, ChatGPT connectors and Claude web cannot run a local package. They reach the same 13 tools through the hosted transport `https://flowzap.xyz/mcp` (Streamable HTTP, protocol 2025-06-18) — see below.
 
 ### JSON Configuration
 
@@ -82,7 +84,7 @@ All tools use the same JSON configuration format:
 ### Compliance Tool
 | Tool | Description |
 |------|-------------|
-| `flowzap_compliance_check` | Run automated SOC2, GDPR, and PIPL compliance analysis on a FlowZap Code data-flow diagram. Backed by Deepseek LLM with strict rate limits (3/day per IP, 1/hour burst, global 5-min circuit breaker). Returns a shareable ephemeral result URL (60-min TTL). |
+| `flowzap_compliance_check` | Run automated SOC2, GDPR, PIPL and EU AI Act compliance analysis on a FlowZap Code data-flow diagram. Backed by Deepseek LLM with strict quotas (10 analyses per rolling 30-day period, 3/hour burst, global 5-min circuit breaker). Returns a shareable result URL kept 90 days, with the analyzed diagram deleted after 24 hours. |
 
 ### Mind Map Tools
 | Tool | Description |
@@ -136,7 +138,7 @@ The agent uses `flowzap_fix` to deterministically repair numbering, inferred han
 
 **Compliance Audit:**
 ```
-"Check my data flow diagram for SOC2, GDPR, and PIPL compliance."
+"Check my data flow diagram for SOC2, GDPR, PIPL and EU AI Act compliance."
 ```
 The agent uses `flowzap_compliance_check` to run an automated audit and returns a shareable result page.
 
@@ -178,14 +180,28 @@ These endpoints are available for external integrations (no authentication requi
 |----------|--------|------------|-------------|
 | `/api/validate` | POST | 30/min | Validate FlowZap Code syntax |
 | `/api/fix` | POST | 30/min | Deterministically repair mechanical FlowZap Code errors and return the repaired code + applied corrections |
-| `/api/playground/create` | POST | 5/min, 50/day | Create ephemeral playground URL (15-min TTL) |
-| `/api/compliance-check` | POST | 5/min, 30/day | Run SOC2/GDPR/PIPL compliance analysis on FlowZap Code. Returns frameworks + shareable result URL (60-min TTL). Backed by Deepseek LLM. |
+| `/api/playground/create` | POST | 5/min, 50/day | Create ephemeral playground URL (60-min TTL) |
+| `/api/compliance-check` | POST | 5/min, 30/day | Run SOC2/GDPR/PIPL/EU AI Act compliance analysis on FlowZap Code. Returns frameworks + shareable result URL kept 90 days, with the analyzed diagram deleted after 24 hours. Backed by Deepseek LLM. |
+
+## Hosted transport (Streamable HTTP)
+
+The same 13 tools are served at `https://flowzap.xyz/mcp` (protocol `2025-06-18`), listed in the official MCP registry. Nothing is installed, nothing runs on the user's machine — the right path for hosted agents that cannot spawn a local process:
+
+```json
+{
+  "mcpServers": {
+    "flowzap": {
+      "url": "https://flowzap.xyz/mcp"
+    }
+  }
+}
+```
 
 ## Security
 
 - **No authentication required** - Uses only public FlowZap APIs
 - **No user data access** - Cannot read your diagrams or account
-- **Runs locally** - The MCP server runs on your machine
+- **Two transports** - The npm package runs on your machine; the hosted endpoint runs on flowzap.xyz. Both expose the same tools
 - **SSRF protected** - Only connects to flowzap.xyz
 - **Rate limited** - 30 requests/minute client-side
 - **Input validation** - 50KB max code size
@@ -200,7 +216,7 @@ npx skills add flowzap-xyz/flowzap-mcp
 
 - **skills.sh listing:** [https://skills.sh/flowzap-xyz/flowzap-mcp/flowzap-diagrams](https://skills.sh/flowzap-xyz/flowzap-mcp/flowzap-diagrams)
 - **Skill source:** [skills/flowzap-diagrams/](https://github.com/flowzap-xyz/flowzap-mcp/tree/main/skills/flowzap-diagrams)
-- Compatible with: Claude Code, Cursor, Windsurf, Codex, Gemini CLI, GitHub Copilot, Cline, Roo Code, Augment, OpenCode, and more.
+- Compatible with: Claude Code, Cursor, Antigravity, Devin Desktop, Codex, Gemini CLI, GitHub Copilot, Cline, Roo Code, Augment, OpenCode, and more.
 
 ## Public MCP Adoption Signals
 
